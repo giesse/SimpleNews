@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+  # We can add a PostgreSQL service here later
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     - POSTGRES_USER=vscode
+  #     - POSTGRES_PASSWORD=vscode
+  #     - POSTGRES_DB=news_aggregator
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+
+# volumes:
+#   postgres_data:

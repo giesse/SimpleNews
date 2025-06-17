@@ -1,0 +1,25 @@
+{
+  "name": "News Aggregator",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-sqlite",
+        "RooVeterinaryInc.roo-cline"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.analysis.autoImportCompletions": true
+      }
+    }
+  },
+  "forwardPorts": [3000, 8000]
+}
