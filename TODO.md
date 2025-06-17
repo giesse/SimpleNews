@@ -4,9 +4,9 @@ This document lists the remaining tasks required to complete the project. Each f
 
 ## High Priority
 
--   [ ] **Frontend: Initialize Project**
-    -   [ ] Remove the placeholder `package.json`.
-    -   [ ] Initialize a new Next.js application with TypeScript: `npx create-next-app@latest . --ts --eslint --app --src-dir --import-alias "@/*"`
+-   [x] **Frontend: Initialize Project**
+    -   [x] Remove the placeholder `package.json`.
+    -   [x] Initialize a new Next.js application with TypeScript: `npx create-next-app@latest . --ts --eslint --app --src-dir --import-alias "@/*"`
     -   [ ] Clean up default boilerplate code from the Next.js installation.
     -   [ ] Set up Jest and React Testing Library for frontend testing.
 
@@ -35,6 +35,8 @@ This document lists the remaining tasks required to complete the project. Each f
     -   [ ] **Implement:** Add the UI elements and connect them to API calls.
 
 -   [ ] **Backend: API Endpoints**
+    -   [ ] **Test:** Write a failing test in `test_main.py` for CRUD operations on `ARTICLES`.
+    -   [x] **Implement:** Create the API endpoints for managing `ARTICLES`.
     -   [ ] **Test:** Write a failing test in `test_main.py` for CRUD operations on `SOURCES`.
     -   [ ] **Implement:** Create the API endpoints for managing `SOURCES`.
     -   [ ] **Test:** Write a failing test for creating `USER_ARTICLE_INTERACTIONS`.
