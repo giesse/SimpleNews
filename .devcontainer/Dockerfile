@@ -16,5 +16,5 @@ COPY --chown=vscode:vscode backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy frontend package files
-COPY --chown=vscode:vscode package.json package-lock.json* ./
+COPY --chown=vscode:vscode frontend/package.json frontend/package-lock.json* ./
 RUN npm install
