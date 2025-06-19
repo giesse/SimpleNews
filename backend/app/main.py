@@ -51,6 +51,41 @@ def process_article(article_id: int, db: Session = Depends(get_db)):
     return {"message": "Article processed successfully", "article_id": article_id}
 
 
+@app.post("/sources/", response_model=schemas.Source)
+def create_source(source: schemas.SourceCreate, db: Session = Depends(get_db)):
+    return crud.create_source(db=db, source=source)
+
+
+@app.get("/sources/", response_model=List[schemas.Source])
+def read_sources(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    sources = crud.get_sources(db, skip=skip, limit=limit)
+    return sources
+
+
+@app.get("/sources/{source_id}", response_model=schemas.Source)
+def read_source(source_id: int, db: Session = Depends(get_db)):
+    db_source = crud.get_source(db, source_id=source_id)
+    if db_source is None:
+        raise HTTPException(status_code=404, detail="Source not found")
+    return db_source
+
+
+@app.put("/sources/{source_id}", response_model=schemas.Source)
+def update_source(source_id: int, source: schemas.SourceUpdate, db: Session = Depends(get_db)):
+    db_source = crud.update_source(db, source_id=source_id, source=source)
+    if db_source is None:
+        raise HTTPException(status_code=404, detail="Source not found")
+    return db_source
+
+
+@app.delete("/sources/{source_id}", response_model=schemas.Source)
+def delete_source(source_id: int, db: Session = Depends(get_db)):
+    db_source = crud.delete_source(db, source_id=source_id)
+    if db_source is None:
+        raise HTTPException(status_code=404, detail="Source not found")
+    return db_source
+
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}

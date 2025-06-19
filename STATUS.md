@@ -21,4 +21,3 @@ The project has a solid foundation on both the backend and frontend. The backend
 
 1.  **Frontend Development**: Build the basic UI components for displaying articles on top of the existing Next.js boilerplate.
 2.  **Backend: Advanced Scraping**: Implement full article content extraction using `trafilatura` and complete the scraping service logic.
-3.  **Backend: API Endpoints**: Implement CRUD operations for `SOURCES` and the API endpoint for `USER_ARTICLE_INTERACTIONS`.

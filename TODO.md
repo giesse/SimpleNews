@@ -33,8 +33,8 @@ This document lists the remaining tasks required to complete the project. Each f
 -   [ ] **Backend: API Endpoints**
     -   [ ] **Test:** Write a failing test in `test_main.py` for CRUD operations on `ARTICLES`.
     -   [x] **Implement:** Create the API endpoints for managing `ARTICLES`.
-    -   [ ] **Test:** Write a failing test in `test_main.py` for CRUD operations on `SOURCES`.
-    -   [ ] **Implement:** Create the API endpoints for managing `SOURCES`.
+    -   [x] **Test:** Write a failing test in `test_main.py` for CRUD operations on `SOURCES`.
+    -   [x] **Implement:** Create the API endpoints for managing `SOURCES`.
     -   [ ] **Test:** Write a failing test for creating `USER_ARTICLE_INTERACTIONS`.
     -   [ ] **Implement:** Create the API endpoint for user interactions.
 

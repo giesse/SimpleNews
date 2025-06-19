@@ -60,3 +60,39 @@ def link_categories_to_article(db: Session, article_id: int, categories: List[st
     db.commit()
     db.refresh(db_article)  # Refresh the article to reflect new categories
     return db_article
+
+
+def create_source(db: Session, source: schemas.SourceCreate):
+    db_source = models.Source(**source.model_dump())
+    db.add(db_source)
+    db.commit()
+    db.refresh(db_source)
+    return db_source
+
+
+def get_source(db: Session, source_id: int):
+    return db.query(models.Source).filter(models.Source.id == source_id).first()
+
+
+def get_sources(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Source).offset(skip).limit(limit).all()
+
+
+def update_source(db: Session, source_id: int, source: schemas.SourceUpdate):
+    db_source = get_source(db, source_id)
+    if db_source:
+        update_data = source.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(db_source, key, value)
+        db.add(db_source)
+        db.commit()
+        db.refresh(db_source)
+    return db_source
+
+
+def delete_source(db: Session, source_id: int):
+    db_source = get_source(db, source_id)
+    if db_source:
+        db.delete(db_source)
+        db.commit()
+    return db_source

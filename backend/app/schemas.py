@@ -19,3 +19,24 @@ class Article(ArticleBase):
     created_at: datetime.datetime
 
     model_config = {"from_attributes": True}
+
+
+class SourceBase(BaseModel):
+    name: str
+    url: str
+
+
+class SourceCreate(SourceBase):
+    pass
+
+
+class SourceUpdate(SourceBase):
+    name: str | None = None
+    url: str | None = None
+
+
+class Source(SourceBase):
+    id: int
+    last_scraped_at: datetime.datetime | None = None
+
+    model_config = {"from_attributes": True}

@@ -55,3 +55,48 @@ async def test_process_article_endpoint(client, db, mocker):
     # Check that the categories have been linked correctly
     category_names = sorted([category.name for category in updated_article.categories])
     assert category_names == sorted(mocked_categories)
+
+
+@pytest.mark.asyncio
+async def test_source_crud(client, db):
+    """
+    Test CRUD operations for sources.
+    """
+    # 1. Create a source
+    source_in = {"name": "Test Source", "url": "http://testsource.com"}
+    response = await client.post("/sources/", json=source_in)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == source_in["name"]
+    assert data["url"] == source_in["url"]
+    assert "id" in data
+    source_id = data["id"]
+
+    # 2. Read the source
+    response = await client.get(f"/sources/{source_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == source_in["name"]
+    assert data["url"] == source_in["url"]
+
+    # 3. Read all sources
+    response = await client.get("/sources/")
+    assert response.status_code == 200
+    assert len(response.json()) > 0
+
+    # 4. Update the source
+    update_data = {"name": "Updated Test Source"}
+    response = await client.put(f"/sources/{source_id}", json=update_data)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == update_data["name"]
+
+    # 5. Delete the source
+    response = await client.delete(f"/sources/{source_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == source_id
+
+    # Verify deletion
+    response = await client.get(f"/sources/{source_id}")
+    assert response.status_code == 404
