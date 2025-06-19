@@ -17,7 +17,8 @@ def create_article(db: Session, article: schemas.ArticleCreate):
         title=article.title,
         original_content=article.original_content,
         summary=article.summary,
-        # This assumes source_id is handled elsewhere or not required for creation
+        # This assumes source_id is handled elsewhere or not required
+        # for creation
     )
     db.add(db_article)
     db.commit()
