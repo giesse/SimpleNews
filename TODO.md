@@ -15,12 +15,12 @@ This document lists the remaining tasks required to complete the project. Each f
     -   [x] **Implement:** Create the `backend/app/scraping.py` module and the scraping function to pass the test.
     -   [x] **Test:** Write a failing test to ensure the scraper correctly identifies and ignores a URL that is already in the database.
     -   [x] **Implement:** Add the duplicate-checking logic to the scraping service.
+    -   [ ] **Test:** Write a failing test in a new `backend/tests/test_scraping.py` to verify that `trafilatura` extracts the main content from a sample HTML page.
+    -   [ ] **Implement:** Create the `backend/app/scraping.py` module and implement the content extraction logic.
 
 -   [ ] **Backend: LLM Integration**
-    -   [ ] **Test:** Write a failing test in a new `backend/tests/test_llm_interface.py` to verify that `trafilatura` extracts the main content from a sample HTML page.
-    -   [ ] **Implement:** Create the `backend/app/llm_interface.py` module and implement the content extraction logic.
-    -   [ ] **Test:** Write a failing test for the main summarization endpoint in `backend/tests/test_main.py`, mocking the LLM API call.
-    -   [ ] **Implement:** Create the API endpoint that triggers the summarization and categorization for an article.
+    -   [x] **Test:** Write a failing test for the main summarization endpoint in `backend/tests/test_main.py`, mocking the LLM API call.
+    -   [x] **Implement:** Create the API endpoint that triggers the summarization and categorization for an article.
 
 ## Medium Priority
 

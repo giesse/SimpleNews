@@ -1,8 +1,8 @@
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from . import crud, models, schemas
+from . import llm_interface, crud, models, schemas
 from .database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
@@ -28,6 +28,27 @@ def create_article(article: schemas.ArticleCreate, db: Session = Depends(get_db)
 def read_articles(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     articles = crud.get_articles(db, skip=skip, limit=limit)
     return articles
+
+
+@app.post("/articles/{article_id}/process", status_code=200)
+def process_article(article_id: int, db: Session = Depends(get_db)):
+    db_article = crud.get_article(db, article_id=article_id)
+    if not db_article:
+        raise HTTPException(status_code=404, detail="Article not found")
+
+    # Call the new LLM interface
+    summary, categories = llm_interface.generate_summary_and_categories(
+        article_text=db_article.original_content
+    )
+
+    if not summary:
+        raise HTTPException(status_code=500, detail="Failed to process article with LLM")
+
+    # Save the enriched data back to the database
+    crud.update_article_summary(db, article_id=article_id, summary=summary)
+    crud.link_categories_to_article(db, article_id=article_id, categories=categories)
+
+    return {"message": "Article processed successfully", "article_id": article_id}
 
 
 @app.get("/")

@@ -4,7 +4,7 @@ This document provides a snapshot of the current development status of the Perso
 
 ## Overall Summary
 
-The project has a solid foundation on both the backend and frontend. The backend has the database models and basic API endpoints established. The frontend has been initialized with a standard Next.js boilerplate. The core business logic, including web scraping, LLM interaction, and content summarization, has not yet been developed.
+The project has a solid foundation on both the backend and frontend. The backend has the database models and basic API endpoints established. The frontend has been initialized with a standard Next.js boilerplate. Basic web scraping and LLM interaction (for summarization and categorization) have been implemented, but the full core business logic, including advanced content summarization and a complete scraping service, is still under development.
 
 ## Component Status
 
@@ -13,13 +13,11 @@ The project has a solid foundation on both the backend and frontend. The backend
 | **Backend** | Python with FastAPI | ✅ Implemented | The FastAPI application is set up with basic CRUD endpoints for articles. |
 | **Frontend** | TypeScript with Next.js | ✅ Implemented (Boilerplate) | A basic Next.js application has been initialized. The default boilerplate is in place. |
 | **Database** | SQLite (dev), PostgreSQL (prod) | ✅ Implemented (Models) | The SQLAlchemy models in `backend/app/models.py` align perfectly with the database schema in the project plan. The database connection is set up for SQLite. |
-| **Web Scraping** | `requests` & `BeautifulSoup` | ❌ Not Implemented | The necessary libraries are in `requirements.txt`, but no scraping service or logic exists yet. |
-| **LLM Interface** | `requests` or `httpx` | ❌ Not Implemented | The `httpx` library is included in `requirements.txt`, but the interface for communicating with the LLM is not built. |
+| **Web Scraping** | `requests` & `BeautifulSoup` | ✅ Implemented (Basic HTML Parsing) | The `scraping.py` module includes basic HTML parsing with BeautifulSoup, but the full article fetching and saving logic is a placeholder. |
+| **LLM Interface** | `google-generativeai` | ✅ Implemented (Basic Integration) | The `llm_interface.py` module is set up with basic integration for the Gemini API, including prompt engineering for summarization and categorization. |
 | **Token Limit Strategy** | Iterative Map-Reduce Summarization | ❌ Not Implemented | The logic for chunking and summarizing large articles has not been implemented. |
 | **Devcontainer** | Fully configured Docker environment | ✅ Assumed Complete | The `PROJECT_PLAN.md` details the devcontainer setup. Assuming these files are in place as described. |
 
 ## Key Areas for Immediate Focus
 
 1.  **Frontend Development**: Build the basic UI components for displaying articles on top of the existing Next.js boilerplate.
-2.  **Scraping Service**: Implement the service to fetch articles from specified sources.
-3.  **LLM Integration**: Build the service to handle communication with the local LLM, including the summarization and categorization logic.

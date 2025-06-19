@@ -28,7 +28,7 @@ def test_scrape_html():
     assert scraped_content == expected_content
 
 
-def test_scrape_and_save_duplicate_url(db_session):
+def test_scrape_and_save_duplicate_url(db):
     """
     Tests that the scraper correctly identifies and ignores a URL that is already in the database.
     """
@@ -38,12 +38,12 @@ def test_scrape_and_save_duplicate_url(db_session):
         title="Existing Article",
         original_content="This is an existing article.",
     )
-    db_session.add(existing_article)
-    db_session.commit()
+    db.add(existing_article)
+    db.commit()
 
     # 2. Attempt to scrape and save the same URL
-    result = scrape_and_save_article(db_session, "http://example.com/article1")
+    result = scrape_and_save_article(db, "http://example.com/article1")
 
     # 3. Assert that the function returns the correct message and doesn't add a new article
     assert result == {"message": "Article already exists"}
-    assert db_session.query(Article).count() == 1
+    assert db.query(Article).count() == 1

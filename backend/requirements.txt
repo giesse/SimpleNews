@@ -5,7 +5,8 @@ requests
 beautifulsoup4
 python-dotenv
 trafilatura
-google-generativeai
+google-genai
 httpx
 pytest
 pytest-asyncio
+pytest-mock
