@@ -18,5 +18,4 @@ class Article(ArticleBase):
     source_id: int
     created_at: datetime.datetime
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
