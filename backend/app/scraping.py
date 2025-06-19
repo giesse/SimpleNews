@@ -1,5 +1,7 @@
 from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
+from trafilatura import baseline
+
 from . import models
 
 
@@ -9,7 +11,9 @@ def scrape_html(html_content: str) -> dict:
     """
     soup = BeautifulSoup(html_content, "html.parser")
     title = soup.title.string if soup.title else ""
-    text = soup.body.get_text(separator=" ", strip=True) if soup.body else ""
+    # baseline returns a tuple, we only want the text
+    baseline_result = baseline(html_content)
+    text = baseline_result[1] if baseline_result else ""
     return {"title": title, "text": text}
 
 

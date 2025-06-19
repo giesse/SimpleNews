@@ -20,7 +20,7 @@ def test_scrape_html():
 
     expected_content = {
         "title": "Test Page",
-        "text": "Main Heading This is the main content."
+        "text": "Main Heading\nThis is the main content."
     }
 
     scraped_content = scrape_html(mock_html)
@@ -47,3 +47,39 @@ def test_scrape_and_save_duplicate_url(db):
     # 3. Assert that the function returns the correct message and doesn't add a new article
     assert result == {"message": "Article already exists"}
     assert db.query(Article).count() == 1
+
+
+def test_scrape_with_trafilatura():
+    """
+    Tests that trafilatura extracts the main content from a sample HTML page.
+    """
+    mock_html = """
+    <html>
+        <head>
+            <title>Test Page</title>
+        </head>
+        <body>
+            <header>
+                <p>This is the header/boilerplate.</p>
+            </header>
+            <main>
+                <h1>Main Article</h1>
+                <p>This is the main content of the article.</p>
+            </main>
+            <footer>
+                <p>This is the footer/boilerplate.</p>
+            </footer>
+        </body>
+    </html>
+    """
+
+    expected_text = (
+        "This is the header/boilerplate.\n"
+        "Main Article\n"
+        "This is the main content of the article."
+    )
+
+    # This will be the call to the new/modified scraping function
+    scraped_content = scrape_html(mock_html)
+
+    assert scraped_content["text"] == expected_text
