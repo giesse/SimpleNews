@@ -7,8 +7,8 @@ This document lists the remaining tasks required to complete the project. Each f
 -   [x] **Frontend: Initialize Project**
     -   [x] Remove the placeholder `package.json`.
     -   [x] Initialize a new Next.js application with TypeScript: `npx create-next-app@latest . --ts --eslint --app --src-dir --import-alias "@/*"`
-    -   [ ] Clean up default boilerplate code from the Next.js installation.
-    -   [ ] Set up Jest and React Testing Library for frontend testing.
+    -   [x] Clean up default boilerplate code from the Next.js installation.
+    -   [x] Set up Jest and React Testing Library for frontend testing.
 
 -   [ ] **Backend: Scraping Service**
     -   [ ] **Test:** Write a failing test in a new `backend/tests/test_scraping.py` file to verify that a function can scrape content from a mock HTML page.
