@@ -11,7 +11,7 @@ The project has a solid foundation on both the backend and frontend. The backend
 | Component | Plan | Status | Notes |
 | :--- | :--- | :--- | :--- |
 | **Backend** | Python with FastAPI | ✅ Implemented | The FastAPI application is set up with basic CRUD endpoints for articles. |
-| **Frontend** | TypeScript with Next.js | ✅ Implemented (Boilerplate & Setup) | A basic Next.js application has been initialized, cleaned up, and configured with Jest and React Testing Library. |
+| **Frontend** | TypeScript with Next.js | ✅ Implemented (Basic Article Display) | The Next.js application now displays a list of articles fetched from the backend, including `ArticleCard` and `ArticleList` components. Jest and React Testing Library are configured. |
 | **Database** | SQLite (dev), PostgreSQL (prod) | ✅ Implemented (Models) | The SQLAlchemy models in `backend/app/models.py` align perfectly with the database schema in the project plan. The database connection is set up for SQLite. |
 | **Web Scraping** | `requests` & `BeautifulSoup` | ✅ Implemented | Full article content extraction using `trafilatura` is now implemented and verified. The `scraping.py` module includes basic HTML parsing and duplicate URL checking. |
 | **LLM Interface** | `google-genai` | ✅ Implemented (Basic Integration) | The `llm_interface.py` module is set up with basic integration for the Gemini API, including prompt engineering for summarization and categorization. |
