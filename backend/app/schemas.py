@@ -10,7 +10,7 @@ class ArticleBase(BaseModel):
 
 
 class ArticleCreate(ArticleBase):
-    pass
+    source_id: int
 
 
 class Article(ArticleBase):

@@ -11,3 +11,10 @@ export interface Article {
   created_at: string;
   categories: Category[];
 }
+
+export interface Source {
+  id: number;
+  name: string;
+  url: string;
+  last_scraped_at: string | null;
+}

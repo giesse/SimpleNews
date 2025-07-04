@@ -1,8 +1,9 @@
+import datetime
 from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
 from trafilatura import baseline
 
-from . import models
+from . import crud, models, schemas
 
 
 def scrape_html(html_content: str) -> dict:
@@ -17,13 +18,17 @@ def scrape_html(html_content: str) -> dict:
     return {"title": title, "text": text}
 
 
-def scrape_and_save_article(db: Session, url: str):
-    # This is a placeholder function. It will be implemented later.
-    # For now, it returns a hardcoded message to make the test pass.
-    existing_article = db.query(models.Article).filter(models.Article.url == url).first()
-    if existing_article:
-        return {"message": "Article already exists"}
-
-    # In a real scenario, we would scrape the URL here.
-    # For now, we'll just return a success message.
-    return {"message": "Article scraped and saved successfully"}
+def scrape_source(db: Session, source: models.Source):
+    """
+    Creates a dummy article for a given source.
+    """
+    # For now, we'll just create a dummy article to prove the concept
+    article_create = schemas.ArticleCreate(
+        title=f"Dummy Article from {source.name}",
+        url=f"http://example.com/articles/{source.id}/{datetime.datetime.utcnow().timestamp()}",
+        original_content="This is a dummy article.",
+        summary="This is a dummy summary.",
+        source_id=source.id,
+    )
+    crud.create_article(db=db, article=article_create)
+    return {"message": f"Scraped {source.name} and created a dummy article."}

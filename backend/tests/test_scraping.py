@@ -1,5 +1,7 @@
-from app.scraping import scrape_html, scrape_and_save_article
-from app.models import Article
+from sqlalchemy.orm import Session
+
+from app.models import Article, Source
+from app.scraping import scrape_html, scrape_source
 
 
 def test_scrape_html():
@@ -28,25 +30,25 @@ def test_scrape_html():
     assert scraped_content == expected_content
 
 
-def test_scrape_and_save_duplicate_url(db):
+def test_scrape_source(db: Session):
     """
-    Tests that the scraper correctly identifies and ignores a URL that is already in the database.
+    Tests that scraping a source creates a dummy article.
     """
-    # 1. Create a mock article and save it to the database
-    existing_article = Article(
-        url="http://example.com/article1",
-        title="Existing Article",
-        original_content="This is an existing article.",
-    )
-    db.add(existing_article)
+    # 1. Create a mock source and save it to the database
+    source = Source(name="Test Source", url="http://test.com")
+    db.add(source)
     db.commit()
+    db.refresh(source)
 
-    # 2. Attempt to scrape and save the same URL
-    result = scrape_and_save_article(db, "http://example.com/article1")
+    # 2. Call scrape_source
+    result = scrape_source(db, source)
 
-    # 3. Assert that the function returns the correct message and doesn't add a new article
-    assert result == {"message": "Article already exists"}
+    # 3. Assert that a new article was created
+    assert result == {"message": f"Scraped {source.name} and created a dummy article."}
     assert db.query(Article).count() == 1
+    article = db.query(Article).first()
+    assert article.source_id == source.id
+    assert article.title == f"Dummy Article from {source.name}"
 
 
 def test_scrape_with_trafilatura():

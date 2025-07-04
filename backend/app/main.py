@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 
-from . import llm_interface, crud, models, schemas
+from . import llm_interface, crud, models, schemas, scraping
 from .database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
@@ -97,6 +97,22 @@ def delete_source(source_id: int, db: Session = Depends(get_db)):
     if db_source is None:
         raise HTTPException(status_code=404, detail="Source not found")
     return db_source
+
+
+@app.post("/sources/{source_id}/scrape", status_code=200)
+def scrape_source(source_id: int, db: Session = Depends(get_db)):
+    db_source = crud.get_source(db, source_id=source_id)
+    if db_source is None:
+        raise HTTPException(status_code=404, detail="Source not found")
+    return scraping.scrape_source(db=db, source=db_source)
+
+
+@app.post("/sources/scrape", status_code=200)
+def scrape_all_sources(db: Session = Depends(get_db)):
+    sources = crud.get_sources(db)
+    for source in sources:
+        scraping.scrape_source(db=db, source=source)
+    return {"message": "Scraping all sources initiated."}
 
 
 @app.get("/")

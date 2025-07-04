@@ -30,11 +30,14 @@ async def test_process_article_endpoint(client, db, mocker):
         return_value=(mocked_summary, mocked_categories),
     )
 
-    # 2. Create a mock article in the database
+    # 2. Create a mock source and article in the database
+    source_in = schemas.SourceCreate(name="Test Source", url="http://test.com")
+    db_source = crud.create_source(db=db, source=source_in)
     article_in = schemas.ArticleCreate(
         url="http://example.com/test-article",
         title="Test Article",
         original_content="This is the original content of the test article.",
+        source_id=db_source.id,
     )
     db_article = crud.create_article(db=db, article=article_in)
 
