@@ -10,7 +10,7 @@ export default function ArticleCard({ article }: { article: Article }) {
           {new Date(article.created_at).toLocaleDateString()}
         </div>
         <div className="flex">
-          {article.categories.map((category) => (
+          {article.categories && article.categories.map((category) => (
             <span
               key={category.id}
               className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2"
