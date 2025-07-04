@@ -45,4 +45,4 @@ This guide explains how to set up the local development environment for the Pers
 *   **Build Issues:** Check the logs in the VS Code terminal for any errors during the Docker image build or `postCreateCommand` execution.
 *   **Extension Conflicts:** If you have many local VS Code extensions, some might conflict. The devcontainer provides a clean slate of extensions defined in `devcontainer.json`.
 
-With these steps, you should have a fully functional local development environment. Refer to `DEVELOPMENT_SERVERS.md` (or `kg/how-to/run_development_servers.md`) for instructions on how to run the frontend and backend servers.
+With these steps, you should have a fully functional local development environment. Refer to [`run_development_servers.md`](./run_development_servers.md) for instructions on how to run the frontend and backend servers.

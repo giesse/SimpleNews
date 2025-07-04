@@ -48,4 +48,4 @@ The system comprises:
 *   A **Data Layer** (SQLite/PostgreSQL) for storage.
 *   **External Services** including news websites and the Google Gemini API.
 
-For a detailed architectural breakdown, see [`PROJECT_PLAN.md`](../PROJECT_PLAN.md) and the visual diagram within it. The technology stack choices are also detailed in the project plan.
+Detailed technology stack choices are documented in [ADR 001: Choice of Technology Stack](./decisions/001-technology-stack.md). The overall architecture is described in this document and further detailed by the various components within the knowledge graph.
