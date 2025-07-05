@@ -1,6 +1,7 @@
 fastapi
 uvicorn[standard]
 sqlalchemy
+alembic
 requests
 beautifulsoup4
 python-dotenv
@@ -10,3 +11,5 @@ httpx
 pytest
 pytest-asyncio
 pytest-mock
+requests-mock
+lxml

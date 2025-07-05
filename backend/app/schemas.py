@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Dict, Any
 import datetime
 
 
@@ -11,6 +12,7 @@ class ArticleBase(BaseModel):
 
 class ArticleCreate(ArticleBase):
     source_id: int
+    summary: str | None = None
 
 
 class Article(ArticleBase):
@@ -24,6 +26,8 @@ class Article(ArticleBase):
 class SourceBase(BaseModel):
     name: str
     url: str
+    scraper_type: str | None = None
+    config: Dict[str, Any] | None = None
 
 
 class SourceCreate(SourceBase):
@@ -33,10 +37,14 @@ class SourceCreate(SourceBase):
 class SourceUpdate(SourceBase):
     name: str | None = None
     url: str | None = None
+    scraper_type: str | None = None
+    config: Dict[str, Any] | None = None
 
 
 class Source(SourceBase):
     id: int
     last_scraped_at: datetime.datetime | None = None
+    scraper_type: str | None = None
+    config: Dict[str, Any] | None = None
 
     model_config = {"from_attributes": True}

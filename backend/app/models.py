@@ -1,5 +1,6 @@
 from sqlalchemy import (
     Column,
+    JSON,
     Integer,
     String,
     Text,
@@ -36,6 +37,8 @@ class Source(Base):
     name = Column(String, index=True)
     url = Column(String, unique=True, index=True)
     last_scraped_at = Column(DateTime)
+    scraper_type = Column(String, nullable=True)
+    config = Column(JSON, nullable=True)
     articles = relationship("Article", back_populates="source")
 
 
