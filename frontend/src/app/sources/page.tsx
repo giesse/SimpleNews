@@ -5,7 +5,7 @@ import SourceList from '@/components/SourceList';
 import SourceForm from '@/components/SourceForm';
 import { scrapeAllSources } from '@/lib/api';
 
-export default function AdminSourcesPage() {
+export default function SourcesPage() {
   // This state is used to trigger a re-render of the SourceList
   const [key, setKey] = useState(0);
 
