@@ -2,6 +2,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
+import requests
 
 from . import llm_interface, crud, models, schemas, scraping
 from .database import SessionLocal, engine
@@ -30,6 +31,15 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def fetch_url_content(url: str) -> str:
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return response.text
+    except requests.RequestException as e:
+        raise HTTPException(status_code=400, detail=f"Failed to fetch URL: {e}")
 
 
 @app.post("/articles/", response_model=schemas.Article)
@@ -66,6 +76,9 @@ def process_article(article_id: int, db: Session = Depends(get_db)):
 
 @app.post("/sources/", response_model=schemas.Source)
 def create_source(source: schemas.SourceCreate, db: Session = Depends(get_db)):
+    # If scraper_type is not provided or is "Auto", default to "HTML"
+    if source.scraper_type is None or source.scraper_type == "Auto":
+        source.scraper_type = "HTML"
     return crud.create_source(db=db, source=source)
 
 
@@ -113,6 +126,15 @@ def scrape_all_sources(db: Session = Depends(get_db)):
     for source in sources:
         scraping.scrape_source(db=db, source=source)
     return {"message": "Scraping all sources initiated."}
+
+
+@app.post("/sources/autodetect-selector", response_model=dict)
+def autodetect_selector(source: schemas.SourceBase):
+    content = fetch_url_content(source.url)
+    selector = llm_interface.find_article_link_selector(content)
+    if not selector:
+        raise HTTPException(status_code=500, detail="Failed to detect selector.")
+    return {"selector": selector}
 
 
 @app.get("/")

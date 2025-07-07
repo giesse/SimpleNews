@@ -23,7 +23,7 @@ The backend is a FastAPI application.
 3.  **Run the FastAPI Application:**
     Use Uvicorn to run the development server:
     ```bash
-    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 --env-file .env
     ```
     *   `app.main:app`: Points Uvicorn to the FastAPI application instance (`app`) in the `main.py` file within the `app` directory.
     *   `--reload`: Enables auto-reloading, so the server restarts automatically when code changes are detected.
