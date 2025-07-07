@@ -39,3 +39,5 @@ Thumbs.db
 # IDEs
 .idea/
 .vscode/
+
+.env

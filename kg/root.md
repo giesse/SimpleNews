@@ -8,6 +8,19 @@ The purpose of this knowledge graph is to:
 *   Provide context for AI assistants working with the codebase.
 *   Document key architectural decisions and patterns.
 
+## Project Summary
+
+The project is a **Personalized News Aggregator** that scans websites, summarizes new articles using a local LLM (Gemma), and displays them based on user interests. The goal is to create a smart, self-hosted news feed that adapts to your preferences.
+
+Important: Always use a TDD approach! Tests first!
+
+**Key Technologies:**
+*   **Backend:** Python with FastAPI
+*   **Frontend:** TypeScript with Next.js (React)
+*   **Database:** SQLite (development), PostgreSQL (production)
+*   **Web Scraping:** `requests` & `BeautifulSoup`
+*   **LLM Interface:** Google Gemini API
+
 ## How to Use This Knowledge Graph
 
 *   **Start Here:** This `root.md` file is the main entry point.
