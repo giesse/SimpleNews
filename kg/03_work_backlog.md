@@ -7,6 +7,12 @@ This document lists the remaining tasks required to complete the project. It is 
 *   `[ ]` - Not Started
 *   `[-]` - In Progress (if applicable, though original uses only complete/incomplete)
 
+## Issues
+
+* [x] - the python backend does not seem to read the .env file in the backend directory; or it's not getting the gemini api key from it correctly. Can we write a test for this?
+* [ ] - This is a single user app, editing sources should be linked from the main page, not hidden inside /admin/sources
+* [ ] - I want, as the highest priority, to be able to scrape a source and get articles from it, and have them summarized and categorized appropriately, and browsable from the main page. "Path to success". Let's follow TDD whenever possible.
+
 ## High Priority (Completed)
 
 *   **Frontend: Initialize Project**

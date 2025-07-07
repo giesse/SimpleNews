@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import { getSources, deleteSource, scrapeSource } from '@/lib/api';
 import { Source } from '@/lib/types';
+import SourceForm from './SourceForm';
 
 export default function SourceList() {
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingSource, setEditingSource] = useState<Source | null>(null);
 
   async function loadSources() {
     try {
@@ -43,12 +45,35 @@ export default function SourceList() {
     }
   }
 
+  function handleEdit(source: Source) {
+    setEditingSource(source);
+  }
+
+  function handleCancelEdit() {
+    setEditingSource(null);
+  }
+
+  function handleSourceUpdated() {
+    setEditingSource(null);
+    loadSources();
+  }
+
   if (loading) {
     return <div>Loading sources...</div>;
   }
 
   if (error) {
     return <div className="text-red-500">Error: {error}</div>;
+  }
+
+  if (editingSource) {
+    return (
+      <SourceForm
+        source={editingSource}
+        onSourceUpdated={handleSourceUpdated}
+        onCancel={handleCancelEdit}
+      />
+    );
   }
 
   return (
@@ -58,6 +83,7 @@ export default function SourceList() {
           <div>
             <h3 className="text-lg font-bold">{source.name}</h3>
             <p className="text-gray-500">{source.url}</p>
+            <p className="text-sm text-gray-400">Scraper Type: {source.scraper_type || 'Not Set'}</p>
             <p className="text-sm text-gray-400">
               Last scraped: {source.last_scraped_at ? new Date(source.last_scraped_at).toLocaleString() : 'Never'}
             </p>
@@ -70,7 +96,7 @@ export default function SourceList() {
               Scrape
             </button>
             <button
-              onClick={() => alert('Edit functionality not implemented yet.')}
+              onClick={() => handleEdit(source)}
               className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded"
             >
               Edit

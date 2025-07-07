@@ -22,7 +22,7 @@ export function getSources(): Promise<Source[]> {
   return fetcher<Source[]>('/sources/');
 }
 
-export function createSource(data: { name: string; url: string }): Promise<Source> {
+export function createSource(data: { name: string; url: string; scraper_type: string, config: { article_link_selector: string } }): Promise<Source> {
   return fetcher<Source>('/sources/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -30,7 +30,7 @@ export function createSource(data: { name: string; url: string }): Promise<Sourc
   });
 }
 
-export function updateSource(id: number, data: { name?: string; url?: string }): Promise<Source> {
+export function updateSource(id: number, data: { name?: string; url?: string, scraper_type?: string, config?: { article_link_selector: string } }): Promise<Source> {
   return fetcher<Source>(`/sources/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -47,6 +47,14 @@ export function deleteSource(id: number): Promise<Source> {
 export function scrapeSource(id: number): Promise<{ message: string }> {
   return fetcher<{ message: string }>(`/sources/${id}/scrape`, {
     method: 'POST',
+  });
+}
+
+export function autodetectSelector(name: string, url: string): Promise<{ selector: string }> {
+  return fetcher<{ selector: string }>('/sources/autodetect-selector', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, url }),
   });
 }
 

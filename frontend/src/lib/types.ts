@@ -16,5 +16,6 @@ export interface Source {
   id: number;
   name: string;
   url: string;
+  scraper_type?: string;
   last_scraped_at: string | null;
 }

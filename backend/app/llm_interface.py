@@ -14,7 +14,13 @@ def get_llm_client():
     """
     global client
     if client is None:
-        client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "GEMINI_API_KEY environment variable not set. "
+                "Please ensure your .env file is correctly configured and loaded."
+            )
+        client = genai.Client(api_key=api_key)
     return client
 
 
@@ -79,7 +85,7 @@ def generate_summary_and_categories(article_text: str) -> Tuple[str, List[str]]:
         # Simple and robust parsing of the structured response
         summary = full_response.split("Summary:")[1].split("Categories:")[0].strip()
         categories_str = full_response.split("Categories:")[1].strip()
-        categories = [cat.strip() for cat in categories_str.split(',')]
+        categories = [cat.strip() for cat in categories_str.split(",")]
 
         return summary, categories
 
@@ -87,3 +93,57 @@ def generate_summary_and_categories(article_text: str) -> Tuple[str, List[str]]:
         print(f"An error occurred while calling the Gemini API: {e}")
         # Return empty values or raise a custom exception
         return "", []
+
+
+def find_article_link_selector(page_content: str) -> str:
+    """
+    Analyzes the HTML content of a source's main page to find the CSS selector
+    that targets the primary article links.
+    """
+    model = "gemma-3-27b-it"
+    prompt = f"""
+    Analyze the following HTML content from a news or blog website.
+    Your task is to identify the CSS selector that will reliably target the links to the main articles on the page.
+    Focus on the primary list of articles, not sidebars, headers, or footers.
+
+    **HTML Content:**
+    ---
+    {page_content[:10000]}  # Limit content to avoid exceeding token limits
+    ---
+
+    **Instructions:**
+    1.  Examine the structure of the HTML to find the repeating pattern for article entries.
+    2.  Identify a CSS selector that uniquely targets the `<a>` tags of these articles.
+    3.  Provide only the CSS selector as the output.
+
+    **Output Format (Strictly follow this):**
+    [Your CSS selector here]
+    """
+
+    contents = [
+        types.Content(
+            role="user",
+            parts=[types.Part.from_text(text=prompt)],
+        ),
+    ]
+
+    generate_content_config = types.GenerateContentConfig(
+        response_mime_type="text/plain",
+        temperature=0.1,  # Very low temperature for precision
+    )
+
+    try:
+        llm_client = get_llm_client()
+        response = llm_client.models.generate_content(
+            model=model,
+            contents=contents,
+            config=generate_content_config,
+        )
+        # The response should be the selector itself
+        selector = response.text.strip()
+        return selector
+    except Exception as e:
+        print(
+            f"An error occurred while calling the Gemini API for selector generation: {e}"
+        )
+        return ""
