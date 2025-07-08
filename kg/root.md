@@ -24,13 +24,24 @@ Important: Always use a TDD approach! Tests first!
 ## How to Use This Knowledge Graph
 
 *   **Start Here:** This `root.md` file is the main entry point.
-*   **Product Overview:** For a high-level understanding of the project, see [`01_product_overview.md`](./01_product_overview.md).
-*   **Glossary:** To understand project-specific terminology, refer to [`02_glossary.md`](./02_glossary.md).
-*   **Work Backlog:** For current tasks and technical debt, see [`03_work_backlog.md`](./03_work_backlog.md).
-*   **Architectural Decisions:** Important decisions are logged in the [`decisions/`](./decisions/) directory.
-*   **Reusable Patterns:** Common patterns and best practices are documented in [`patterns/`](./patterns/).
-*   **How-To Guides:** Step-by-step instructions for common tasks are available in [`how-to/`](./how-to/).
-*   **Data Models:** Descriptions of data structures can be found in [`data_models/`](./data_models/).
+*   **Product Overview:** [`01_product_overview.md`](./01_product_overview.md) - Core concept, problems solved, target users, features, and architecture of the news aggregator.
+*   **Glossary:** [`02_glossary.md`](./02_glossary.md) - Definitions of key terms and acronyms used throughout the project.
+*   **Work Backlog:** [`03_work_backlog.md`](./03_work_backlog.md) - Current tasks, bugs, and features in progress or planned for development.
+
+**Architectural Decisions:**
+*   [`001-technology-stack.md`](./decisions/001-technology-stack.md) - Documents and justifies the project's technology choices including FastAPI, Next.js, and Google Gemini API.
+
+**Reusable Patterns:**
+*   [`test-driven-development.md`](./patterns/test-driven-development.md) - Explains the TDD methodology used in this project with examples of implementation.
+*   [`tailwind-css-v4-configuration.md`](./patterns/tailwind-css-v4-configuration.md) - Details the correct configuration and usage of Tailwind CSS v4 in the Next.js frontend.
+
+**How-To Guides:**
+*   [`setup_local_environment.md`](./how-to/setup_local_environment.md) - Step-by-step instructions for setting up the development environment using VS Code Devcontainers.
+*   [`run_development_servers.md`](./how-to/run_development_servers.md) - Guide for running the frontend and backend development servers.
+*   [`initialize-knowledge-graph.md`](./how-to/initialize-knowledge-graph.md) - Instructions for adding new content to the knowledge graph.
+
+**Data Models:**
+*   [`database_schema.md`](./data_models/database_schema.md) - Complete database schema with tables for users, articles, sources, categories, and their relationships.
 
 ## Navigating the Knowledge Graph
 
