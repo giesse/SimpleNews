@@ -10,6 +10,7 @@ export interface Article {
   summary: string;
   created_at: string;
   categories: Category[];
+  read?: boolean;
 }
 
 export interface Source {

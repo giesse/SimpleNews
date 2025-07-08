@@ -14,15 +14,47 @@ export async function fetcher<T>(
 
   return response.json();
 }
-export function getArticles(): Promise<Article[]> {
-  return fetcher<Article[]>('/articles/');
+
+// Articles API
+export function getArticles(filters?: { 
+  category_id?: number | string; 
+  read?: boolean;
+}): Promise<Article[]> {
+  let url = '/articles/';
+  
+  if (filters) {
+    const params = new URLSearchParams();
+    if (filters.category_id) params.append('category_id', filters.category_id.toString());
+    if (filters.read !== undefined) params.append('read', filters.read.toString());
+    
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+  }
+  
+  return fetcher<Article[]>(url);
 }
 
+// Note: The backend would need to implement this endpoint
+export function markArticleAsRead(id: number, isRead: boolean): Promise<Article> {
+  return fetcher<Article>(`/articles/${id}/read-status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ read: isRead }),
+  });
+}
+
+// Sources API
 export function getSources(): Promise<Source[]> {
   return fetcher<Source[]>('/sources/');
 }
 
-export function createSource(data: { name: string; url: string; scraper_type: string, config: { article_link_selector: string } }): Promise<Source> {
+export function createSource(data: { 
+  name: string; 
+  url: string; 
+  scraper_type: string, 
+  config: { article_link_selector: string } 
+}): Promise<Source> {
   return fetcher<Source>('/sources/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -30,7 +62,12 @@ export function createSource(data: { name: string; url: string; scraper_type: st
   });
 }
 
-export function updateSource(id: number, data: { name?: string; url?: string, scraper_type?: string, config?: { article_link_selector: string } }): Promise<Source> {
+export function updateSource(id: number, data: { 
+  name?: string; 
+  url?: string, 
+  scraper_type?: string, 
+  config?: { article_link_selector: string } 
+}): Promise<Source> {
   return fetcher<Source>(`/sources/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -44,8 +81,29 @@ export function deleteSource(id: number): Promise<Source> {
   });
 }
 
-export function scrapeSource(id: number): Promise<{ message: string }> {
-  return fetcher<{ message: string }>(`/sources/${id}/scrape`, {
+// Scraping API
+export interface ScrapeJob {
+  id: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  progress: number;
+  message: string;
+  created_at: string;
+  completed_at?: string;
+}
+
+export function scrapeSource(id: number): Promise<{ job_id: string; message: string }> {
+  return fetcher<{ job_id: string; message: string }>(`/sources/${id}/scrape`, {
+    method: 'POST',
+  });
+}
+
+// Note: The backend would need to implement this endpoint
+export function getScrapeJobStatus(jobId: string): Promise<ScrapeJob> {
+  return fetcher<ScrapeJob>(`/scrape/jobs/${jobId}`);
+}
+
+export function scrapeAllSources(): Promise<{ job_id: string; message: string }> {
+  return fetcher<{ job_id: string; message: string }>(`/sources/scrape`, {
     method: 'POST',
   });
 }
@@ -58,8 +116,7 @@ export function autodetectSelector(name: string, url: string): Promise<{ selecto
   });
 }
 
-export function scrapeAllSources(): Promise<{ message: string }> {
-  return fetcher<{ message: string }>(`/sources/scrape`, {
-    method: 'POST',
-  });
+// Categories API
+export function getCategories(): Promise<{ id: number; name: string }[]> {
+  return fetcher<{ id: number; name: string }[]>('/categories/');
 }
