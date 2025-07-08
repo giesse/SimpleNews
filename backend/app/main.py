@@ -1,8 +1,9 @@
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List
-import requests
+from typing import List, Dict
+import uuid
+import asyncio
 
 from . import llm_interface, crud, models, schemas, scraping
 from .database import SessionLocal, engine
@@ -10,6 +11,9 @@ from .database import SessionLocal, engine
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+# In-memory store for job statuses
+job_statuses: Dict[str, schemas.JobStatus] = {}
 
 origins = [
     "http://localhost:3000",
@@ -33,13 +37,39 @@ def get_db():
         db.close()
 
 
-def fetch_url_content(url: str) -> str:
+async def run_scraping_job(job_id: str, db: Session):
+    """
+    The actual scraping logic that runs in the background.
+    """
+    job_statuses[job_id] = schemas.JobStatus(
+        id=job_id, status="in_progress", progress=0, message="Initializing..."
+    )
+
     try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        return response.text
-    except requests.RequestException as e:
-        raise HTTPException(status_code=400, detail=f"Failed to fetch URL: {e}")
+        sources = crud.get_sources(db)
+        total_sources = len(sources)
+        
+        for i, source in enumerate(sources):
+            progress = int(((i + 1) / total_sources) * 100)
+            job_statuses[job_id] = schemas.JobStatus(
+                id=job_id,
+                status="in_progress",
+                progress=progress,
+                message=f"Scraping {source.name}...",
+            )
+            scraping.scrape_source(db=db, source=source)
+            await asyncio.sleep(1) # Yield control to the event loop
+
+        job_statuses[job_id] = schemas.JobStatus(
+            id=job_id, status="completed", progress=100, message="Scraping complete!"
+        )
+
+    except Exception as e:
+        job_statuses[job_id] = schemas.JobStatus(
+            id=job_id, status="failed", progress=0, message=f"An error occurred: {e}"
+        )
+    finally:
+        db.close()
 
 
 @app.post("/articles/", response_model=schemas.Article)
@@ -120,12 +150,19 @@ def scrape_source(source_id: int, db: Session = Depends(get_db)):
     return scraping.scrape_source(db=db, source=db_source)
 
 
-@app.post("/sources/scrape", status_code=200)
-def scrape_all_sources(db: Session = Depends(get_db)):
-    sources = crud.get_sources(db)
-    for source in sources:
-        scraping.scrape_source(db=db, source=source)
-    return {"message": "Scraping all sources initiated."}
+@app.post("/sources/scrape", response_model=schemas.ScrapeJob, status_code=202)
+def scrape_all_sources(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    job_id = str(uuid.uuid4())
+    background_tasks.add_task(run_scraping_job, job_id, db)
+    return schemas.ScrapeJob(job_id=job_id, message="Scraping job initiated")
+
+
+@app.get("/sources/scrape/status/{job_id}", response_model=schemas.JobStatus)
+def get_scrape_job_status(job_id: str):
+    status = job_statuses.get(job_id)
+    if not status:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return status
 
 
 @app.post("/sources/autodetect-selector", response_model=dict)

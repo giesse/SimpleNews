@@ -1,6 +1,21 @@
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, Literal
 import datetime
+
+# Job status values: in_progress, completed, failed
+JobStatusType = Literal["in_progress", "completed", "failed"]
+
+
+class ScrapeJob(BaseModel):
+    job_id: str
+    message: str
+
+
+class JobStatus(BaseModel):
+    id: str
+    status: JobStatusType
+    progress: int
+    message: str
 
 
 class ArticleBase(BaseModel):
