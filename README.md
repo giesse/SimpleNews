@@ -15,7 +15,7 @@ The project has a solid foundation on the backend, with the database models and 
 | **Database** | SQLite (dev), PostgreSQL (prod) | ✅ Implemented (Models) | The SQLAlchemy models in `backend/app/models.py` align with the project plan. |
 | **Web Scraping** | `requests` & `BeautifulSoup` | ✅ Implemented (Basic) | The necessary libraries are in `requirements.txt`, and a basic HTML scraper is implemented. |
 | **LLM Interface** | Google Gemini API | ✅ Implemented (Basic) | The `google-generativeai` library is included, and a basic interface for the LLM is built. |
-| **Token Limit Strategy** | Iterative Map-Reduce Summarization | ❌ Not Implemented | The logic for handling large articles has not been implemented. |
+
 
 *For a detailed list of pending tasks, see the [Work Backlog](./kg/03_work_backlog.md).*
 

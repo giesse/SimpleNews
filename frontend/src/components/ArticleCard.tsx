@@ -80,7 +80,7 @@ export default function ArticleCard({ article, isRead = false, onReadStatusChang
             {formattedDate}
           </span>
           
-          <div className="flex flex-wrap">
+          <div className="flex flex-wrap" data-testid="category-container">
             {article.categories && article.categories.map((category) => (
               <span
                 key={category.id}

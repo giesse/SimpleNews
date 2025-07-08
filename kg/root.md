@@ -30,6 +30,7 @@ Important: Always use a TDD approach! Tests first!
 
 **Architectural Decisions:**
 *   [`001-technology-stack.md`](./decisions/001-technology-stack.md) - Documents and justifies the project's technology choices including FastAPI, Next.js, and Google Gemini API.
+*   [`002-token-limit-strategy.md`](./decisions/002-token-limit-strategy.md) - Explains the decision to not implement a token limit strategy.
 
 **Reusable Patterns:**
 *   [`test-driven-development.md`](./patterns/test-driven-development.md) - Explains the TDD methodology used in this project with examples of implementation.
