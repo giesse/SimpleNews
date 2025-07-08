@@ -17,8 +17,19 @@ describe('SourceList', () => {
   beforeEach(() => {
     mockedApi.getSources.mockResolvedValue(mockSources);
     mockedApi.deleteSource.mockResolvedValue({ id: 1, name: 'Source 1', url: 'http://source1.com', last_scraped_at: null });
-    mockedApi.scrapeSource.mockResolvedValue({ message: 'Scraping started' });
+    mockedApi.scrapeSource.mockResolvedValue({ job_id: '123', message: 'Scraping started' });
+    mockedApi.getScrapeJobStatus.mockResolvedValue({
+      id: '123',
+      status: 'in_progress',
+      progress: 0.5,
+      message: 'Scraping in progress',
+      created_at: new Date().toISOString()
+    });
     global.alert = jest.fn();
+    // Mock confirm to return true
+    global.confirm = jest.fn(() => true);
+    // Mock setInterval and clearInterval
+    jest.useFakeTimers();
   });
 
   it('renders a list of sources', async () => {

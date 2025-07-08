@@ -24,6 +24,8 @@ describe('SourceForm', () => {
       expect(mockedApi.createSource).toHaveBeenCalledWith({
         name: 'New Source',
         url: 'http://newsource.com',
+        scraper_type: 'Auto',
+        config: { article_link_selector: '' },
       });
     });
 
