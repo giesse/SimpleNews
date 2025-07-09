@@ -80,7 +80,8 @@ def generate_summary_and_categories(article_text: str) -> Tuple[str, List[str]]:
             contents=contents,
             config=generate_content_config,
         ):
-            full_response += chunk.text
+            if chunk.text:
+                full_response += chunk.text
 
         # Simple and robust parsing of the structured response
         summary = full_response.split("Summary:")[1].split("Categories:")[0].strip()

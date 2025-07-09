@@ -19,6 +19,7 @@ My highest priority is to be able to scrape a source and get articles from it, a
 * [-] - The scraping process can take a long time and currently the HTTP post has to wait for it; we may want this to be async and we may want the UI to have some kind of feedback about progress
     - This is partially done but it looks like clicking an individual Scrape button for a source does not use the progress indicator.
     - I really would like a progress bar or some other sort of indication of what's going on; this does not appear to be working right now?
+    - This has gotten really bad! Scraping and processing articles takes half an hour or more and the UI is completely blocked in the meantime?
 * [ ] - Remove outdated user table; this is a single user application. We will probably need a place to store settings though.
 * [ ] - Clickbait titles. I hate clickbait titles. Perhaps we should replace titles with generated ones that are more accurate and not clickbaity.
 
