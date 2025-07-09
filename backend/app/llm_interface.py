@@ -94,6 +94,65 @@ def generate_summary_and_categories(article_text: str) -> Tuple[str, List[str]]:
         # Return empty values or raise a custom exception
         return "", []
 
+def generate_interest_score(article_text: str, user_interest_prompt: str) -> int:
+    """
+    Sends article text and user interest prompt to the Gemini API to generate an interest score.
+
+    Args:
+        article_text: The core text content of the news article.
+        user_interest_prompt: A prompt describing the user's interests.
+
+    Returns:
+        An integer score between 0 and 100, representing how relevant the article is to the user.
+    """
+    model = "gemma-3-27b-it"  # Using the specified Gemma model
+
+    prompt = f"""
+    Given the following user interest prompt and article text, rate how relevant the article is to the user's interests on a scale of 0 to 100.
+
+    **User Interest Prompt:**
+    ---
+    {user_interest_prompt}
+    ---
+
+    **Article Text:**
+    ---
+    {article_text}
+    ---
+
+    **Instructions:**
+    1.  Provide a score from 0 to 100, where 0 means completely irrelevant and 100 means highly relevant.
+    2.  Provide only the integer score as the output.
+
+    **Output Format (Strictly follow this):**
+    [Score]
+    """
+
+    contents = [
+        types.Content(
+            role="user",
+            parts=[types.Part.from_text(text=prompt)],
+        ),
+    ]
+
+    generate_content_config = types.GenerateContentConfig(
+        response_mime_type="text/plain",
+        temperature=0.1,  # Low temperature for precise, numerical output
+    )
+
+    try:
+        llm_client = get_llm_client()
+        response = llm_client.models.generate_content(
+            model=model,
+            contents=contents,
+            config=generate_content_config,
+        )
+        score = int(response.text.strip())
+        return score
+    except Exception as e:
+        print(f"An error occurred while calling the Gemini API for interest scoring: {e}")
+        return 0 # Return 0 on error or if score cannot be parsed
+
 
 def find_article_link_selector(page_content: str) -> str:
     """

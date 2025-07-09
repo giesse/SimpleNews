@@ -23,17 +23,20 @@ class ArticleBase(BaseModel):
     title: str
     original_content: str | None = None
     summary: str | None = None
+    interest_score: int | None = None
 
 
 class ArticleCreate(ArticleBase):
     source_id: int
     summary: str | None = None
+    interest_score: int | None = None
 
 
 class Article(ArticleBase):
     id: int
     source_id: int
     created_at: datetime.datetime
+    interest_score: int | None = None
 
     model_config = {"from_attributes": True}
 

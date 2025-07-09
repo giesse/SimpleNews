@@ -12,7 +12,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import declarative_base
 import datetime
-
 Base = declarative_base()
 
 article_categories = Table(
@@ -21,6 +20,13 @@ article_categories = Table(
     Column("article_id", Integer, ForeignKey("articles.id"), primary_key=True),
     Column("category_id", Integer, ForeignKey("categories.id"), primary_key=True),
 )
+
+
+class Settings(Base):
+    __tablename__ = "settings"
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String, unique=True, index=True)
+    value = Column(Text)
 
 
 class User(Base):
@@ -50,6 +56,7 @@ class Article(Base):
     title = Column(String)
     original_content = Column(Text)
     summary = Column(Text)
+    interest_score = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     source = relationship("Source", back_populates="articles")
     interactions = relationship("UserArticleInteraction", back_populates="article")

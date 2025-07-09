@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
 from trafilatura import extract
 
-from . import crud, models, schemas
+from . import crud, models, schemas, llm_interface
 
 
 def scrape_html(html_content: str) -> dict:
@@ -15,7 +15,7 @@ def scrape_html(html_content: str) -> dict:
     Scrapes the title and text from HTML content using BeautifulSoup and Trafilatura.
     """
     soup = BeautifulSoup(html_content, "lxml")
-    title = soup.title.string if soup.title else "No Title Found"
+    title = soup.title.string.strip() if soup.title else "No Title Found"
 
     # Use Trafilatura to extract the main content of the article, favoring precision
     text = extract(
@@ -27,7 +27,7 @@ def scrape_html(html_content: str) -> dict:
 
     if text:
         # Remove duplicate lines while preserving order to handle trafilatura's output quirks
-        lines = text.strip().split('\n')
+        lines = text.strip().split("\n")
         unique_lines = list(OrderedDict.fromkeys(lines))
         text = "\n".join(unique_lines)
 
@@ -39,8 +39,11 @@ def _scrape_article_content(url: str) -> dict | None:
     Fetches an article's HTML and scrapes its content.
     Returns a dict with title and content, or None if fetching fails.
     """
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+    }
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         return scrape_html(response.text)
     except requests.RequestException as e:
@@ -61,8 +64,11 @@ def _scrape_html_source(db: Session, source: models.Source):
         print(f"Skipping source {source.name}: 'article_link_selector' not configured.")
         return
 
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+    }
     try:
-        response = requests.get(source.url, timeout=10)
+        response = requests.get(source.url, headers=headers, timeout=10)
         response.raise_for_status()
     except requests.RequestException as e:
         print(f"Error fetching source URL {source.url}: {e}")
@@ -98,8 +104,34 @@ def _scrape_html_source(db: Session, source: models.Source):
             source_id=source.id,
             summary=None,
         )
-        crud.create_article(db=db, article=article_create)
+        db_article = crud.create_article(db=db, article=article_create)
         print(f"Successfully saved article: {scraped_data['title']}")
+
+        # 4. Process the article with LLM for summary and categories
+        print(f"Processing article with LLM: {scraped_data['title']}")
+        summary, categories = llm_interface.generate_summary_and_categories(
+            article_text=scraped_data["text"]
+        )
+
+        if summary:
+            crud.update_article_summary(db, article_id=db_article.id, summary=summary)
+        if categories:
+            crud.link_categories_to_article(
+                db, article_id=db_article.id, categories=categories
+            )
+
+        # 5. Generate interest score
+        interest_prompt = crud.get_interest_prompt(db)
+        interest_score = llm_interface.generate_interest_score(
+            article_text=scraped_data["text"], user_interest_prompt=interest_prompt
+        )
+        crud.update_article_interest_score(
+            db, article_id=db_article.id, interest_score=interest_score
+        )
+        print(
+            f"Successfully generated interest score for article: {scraped_data['title']}"
+        )
+        print(f"Successfully processed article with LLM: {scraped_data['title']}")
 
 
 def scrape_source(db: Session, source: models.Source):
