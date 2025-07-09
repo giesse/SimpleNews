@@ -184,4 +184,11 @@ describe('ArticleCard', () => {
     const categoryContainer = container.querySelector('[data-testid="category-container"]');
     expect(categoryContainer?.children.length).toBe(0);
   });
+
+  it('renders the interest score when provided', () => {
+    const articleWithScore = createTestArticle({ interest_score: 85 });
+    render(<ArticleCard article={articleWithScore} />);
+    
+    expect(screen.getByText('Interest Score: 85')).toBeInTheDocument();
+  });
 });

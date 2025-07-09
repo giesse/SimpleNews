@@ -246,6 +246,76 @@ def calculate_article_score(article_id: int, db: Session = Depends(get_db)):
     }
 
 
+@app.post("/articles/recalculate-scores", response_model=schemas.ScrapeJob, status_code=202)
+def recalculate_all_article_scores(
+    background_tasks: BackgroundTasks, db: Session = Depends(get_db)
+):
+    """
+    Recalculate interest scores for all articles.
+    This is a long-running task, so it runs in the background.
+    """
+    job_id = str(uuid.uuid4())
+    job_statuses[job_id] = schemas.JobStatus(
+        id=job_id, status="pending", progress=0, message="Initializing score recalculation..."
+    )
+    
+    background_tasks.add_task(run_article_scoring_job, job_id, db)
+    
+    return schemas.ScrapeJob(job_id=job_id, message="Article scoring job initiated")
+
+
+async def run_article_scoring_job(job_id: str, db: Session):
+    """
+    Background task that recalculates interest scores for all articles.
+    """
+    job_statuses[job_id] = schemas.JobStatus(
+        id=job_id, status="in_progress", progress=0, message="Starting article scoring..."
+    )
+
+    try:
+        # Get all articles
+        articles = crud.get_articles(db)
+        total_articles = len(articles)
+        interest_prompt = crud.get_interest_prompt(db)
+        
+        for i, article in enumerate(articles):
+            # Update progress
+            progress = int(((i + 1) / total_articles) * 100)
+            job_statuses[job_id] = schemas.JobStatus(
+                id=job_id,
+                status="in_progress",
+                progress=progress,
+                message=f"Scoring article {i+1} of {total_articles}...",
+            )
+            
+            # Calculate score
+            interest_score = llm_interface.generate_interest_score(
+                article_text=article.original_content, 
+                user_interest_prompt=interest_prompt
+            )
+            
+            # Update article in DB
+            crud.update_article_interest_score(
+                db, article_id=article.id, interest_score=interest_score
+            )
+            
+            # Yield control periodically
+            if i % 5 == 0:  # Every 5 articles
+                await asyncio.sleep(0.1)
+        
+        job_statuses[job_id] = schemas.JobStatus(
+            id=job_id, status="completed", progress=100, 
+            message=f"Successfully scored {total_articles} articles!"
+        )
+
+    except Exception as e:
+        job_statuses[job_id] = schemas.JobStatus(
+            id=job_id, status="failed", progress=0, message=f"An error occurred: {e}"
+        )
+    finally:
+        db.close()
+
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}

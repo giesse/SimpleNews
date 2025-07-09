@@ -11,6 +11,7 @@ export interface Article {
   created_at: string;
   categories: Category[];
   read?: boolean;
+  interest_score?: number;
 }
 
 export interface Source {

@@ -34,6 +34,7 @@ While not a commercial product in its current description, the project aims to:
 *   **Web Scraping:** Ability to fetch content from various news sources.
 *   **LLM Summarization & Categorization:** Using Google Gemini API to process articles.
 *   **Personalization:** Users can define an "interest prompt" to tailor their feed.
+*   **Article Scoring:** Assigning a relevance score to each article based on user interests.
 *   **User Interaction:** Liking/disliking articles to refine personalization.
 *   **Database Storage:** Storing articles, user preferences, and sources.
 *   **API Backend:** FastAPI server to manage data and business logic.

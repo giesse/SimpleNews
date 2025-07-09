@@ -125,3 +125,61 @@ async def test_article_filtering_by_score(client, db, mocker):
     filtered_articles = response.json()
     assert len(filtered_articles) == 1
     assert filtered_articles[0]["interest_score"] == 90
+
+
+@pytest.mark.asyncio
+async def test_bulk_article_scoring(client, db, mocker):
+    """
+    Test bulk recalculation of interest scores for all articles.
+    """
+    # Set up a test interest prompt
+    test_prompt = "Technology, Artificial Intelligence"
+    await client.put("/settings/interest_prompt", json={"interest_prompt": test_prompt})
+
+    # Mock the LLM interface
+    mocked_scores = [85, 65, 40]
+    mock_generate_score = mocker.patch(
+        "app.main.llm_interface.generate_interest_score",
+        side_effect=mocked_scores,
+    )
+
+    # Create a mock source
+    source_in = schemas.SourceCreate(name="Test Source", url="http://test.com")
+    db_source = crud.create_source(db=db, source=source_in)
+
+    # Create several test articles
+    article_data = [
+        {"title": "AI Article", "content": "This is about artificial intelligence."},
+        {"title": "Tech Article", "content": "This is about technology."},
+        {"title": "Other Article", "content": "This is about something else."},
+    ]
+
+    for data in article_data:
+        article_in = schemas.ArticleCreate(
+            url=f"http://example.com/{data['title'].lower().replace(' ', '-')}",
+            title=data["title"],
+            original_content=data["content"],
+            source_id=db_source.id,
+        )
+        crud.create_article(db=db, article=article_in)
+
+    # Call the bulk scoring endpoint
+    response = await client.post("/articles/recalculate-scores")
+
+    # Assert the response
+    assert response.status_code == 202  # Accepted - long-running task
+    assert "job_id" in response.json()
+    assert "message" in response.json()
+
+    # Verify that the generate_interest_score was called for each article
+    assert mock_generate_score.call_count == len(article_data)
+
+    # Get the articles to verify their scores
+    response = await client.get("/articles/")
+    articles = response.json()
+
+    # Articles should be returned sorted by interest_score (highest first)
+    assert len(articles) == len(article_data)
+    assert articles[0]["interest_score"] == 85
+    assert articles[1]["interest_score"] == 65
+    assert articles[2]["interest_score"] == 40

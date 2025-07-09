@@ -13,12 +13,16 @@ function FilterBar({
   onCategoryChange,
   showReadArticles,
   onShowReadChange,
+  minScore,
+  onMinScoreChange,
 }: {
   categories: Category[];
   selectedCategory: string;
   onCategoryChange: (categoryId: string) => void;
   showReadArticles: boolean;
   onShowReadChange: (show: boolean) => void;
+  minScore: number;
+  onMinScoreChange: (score: number) => void;
 }) {
   return (
     <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 bg-white p-4 rounded-lg shadow-sm border">
@@ -57,6 +61,22 @@ function FilterBar({
           <option value="unread">Unread Only</option>
         </select>
       </div>
+
+      {/* Minimum score filter */}
+      <div className="flex-1">
+        <label htmlFor="score-filter" className="block text-sm font-medium text-gray-700 mb-1">
+          Minimum Interest Score: {minScore}
+        </label>
+        <input
+          id="score-filter"
+          type="range"
+          min="0"
+          max="100"
+          value={minScore}
+          onChange={(e) => onMinScoreChange(parseInt(e.target.value, 10))}
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+        />
+      </div>
     </div>
   );
 }
@@ -66,6 +86,7 @@ export default function ArticleList() {
   const [readArticleIds, setReadArticleIds] = useState<Set<number>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showReadArticles, setShowReadArticles] = useState(true);
+  const [minScore, setMinScore] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -106,6 +127,7 @@ export default function ArticleList() {
         const data = await getArticles({
           category_id: selectedCategory || undefined,
           read: showReadArticles ? undefined : false,
+          min_score: minScore > 0 ? minScore : undefined,
         });
         
         setArticles(data);
@@ -127,7 +149,7 @@ export default function ArticleList() {
     
     loadArticles();
     // Re-fetch when filters change or when coming back to the component
-  }, [selectedCategory, showReadArticles]);
+  }, [selectedCategory, showReadArticles, minScore]);
 
   if (loading) {
     return (
@@ -177,6 +199,8 @@ export default function ArticleList() {
         onCategoryChange={setSelectedCategory}
         showReadArticles={showReadArticles}
         onShowReadChange={setShowReadArticles}
+        minScore={minScore}
+        onMinScoreChange={setMinScore}
       />
 
       {articles.length === 0 ? (
@@ -186,6 +210,7 @@ export default function ArticleList() {
             onClick={() => {
               setSelectedCategory('');
               setShowReadArticles(true);
+              setMinScore(0);
             }}
             className="mt-2 text-blue-600 hover:text-blue-800 font-medium"
           >

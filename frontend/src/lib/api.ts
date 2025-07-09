@@ -19,6 +19,7 @@ export async function fetcher<T>(
 export function getArticles(filters?: { 
   category_id?: number | string; 
   read?: boolean;
+  min_score?: number;
 }): Promise<Article[]> {
   let url = '/articles/';
   
@@ -26,6 +27,7 @@ export function getArticles(filters?: {
     const params = new URLSearchParams();
     if (filters.category_id) params.append('category_id', filters.category_id.toString());
     if (filters.read !== undefined) params.append('read', filters.read.toString());
+    if (filters.min_score !== undefined) params.append('min_score', filters.min_score.toString());
     
     if (params.toString()) {
       url += `?${params.toString()}`;
@@ -41,6 +43,24 @@ export function markArticleAsRead(id: number, isRead: boolean): Promise<Article>
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ read: isRead }),
+  });
+}
+
+export function getInterestPrompt(): Promise<{ interest_prompt: string }> {
+  return fetcher<{ interest_prompt: string }>('/settings/interest_prompt');
+}
+
+export function updateInterestPrompt(prompt: string): Promise<{ interest_prompt: string, message: string }> {
+  return fetcher<{ interest_prompt: string, message: string }>('/settings/interest_prompt', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ interest_prompt: prompt }),
+  });
+}
+
+export function recalculateAllArticleScores(): Promise<{ job_id: string; message: string }> {
+  return fetcher<{ job_id: string; message: string }>('/articles/recalculate-scores', {
+    method: 'POST',
   });
 }
 

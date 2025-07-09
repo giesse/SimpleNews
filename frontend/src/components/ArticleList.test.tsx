@@ -114,4 +114,32 @@ describe('ArticleList', () => {
     // Wait for the button text to change to its final state
     expect(await within(articleCard).findByRole('button', { name: /mark unread/i })).toBeInTheDocument();
   });
+
+  it('should filter articles by minimum interest score', async () => {
+    render(<ArticleList />);
+    // Wait for initial articles to load
+    await screen.findByText('First Test Article');
+
+    // Mock the API response for the filtered query
+    const filteredArticles = [mockArticles[0]];
+    mockedApi.getArticles.mockResolvedValue(filteredArticles);
+    mockedApi.getArticles.mockClear();
+
+    // Change the minimum score slider
+    const scoreSlider = screen.getByLabelText(/minimum interest score/i);
+    fireEvent.change(scoreSlider, { target: { value: '50' } });
+
+    // Wait for the filtered article to appear
+    expect(await screen.findByText('First Test Article')).toBeInTheDocument();
+
+    // Assert that the other article is no longer present
+    expect(screen.queryByText('Second Test Article')).not.toBeInTheDocument();
+
+    // Verify the API was called with the correct filter
+    expect(mockedApi.getArticles).toHaveBeenCalledWith(
+      expect.objectContaining({
+        min_score: 50,
+      })
+    );
+  });
 });

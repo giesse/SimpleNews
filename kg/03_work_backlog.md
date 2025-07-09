@@ -12,7 +12,7 @@ My highest priority is to be able to scrape a source and get articles from it, a
 
 * [x] - There are a lot of errors while trying to download articles; we may want to pretend to be Firefox (or Google, in fact that might be much better) to be able to access most of the sources.
 * [x] - Articles are not being summarized or categorized after being scraped
-* [ ] - The goal is, by default, to only see things that I care about and don't see things I don't care about. Perhaps the categorization will be enough for this, but I'm thinking that maybe we should have a separate call to the LLM to evaluate a score for how much I will care about the article. The prompt for this will have to be refined over time. (It would be nice to have this prompt refined automatically, but, I'm ok with a simpler solution to start with.)
+* [x] - The goal is, by default, to only see things that I care about and don't see things I don't care about. Perhaps the categorization will be enough for this, but I'm thinking that maybe we should have a separate call to the LLM to evaluate a score for how much I will care about the article. The prompt for this will have to be refined over time. (It would be nice to have this prompt refined automatically, but, I'm ok with a simpler solution to start with.)
 
 ## Issues
 
@@ -33,8 +33,8 @@ My highest priority is to be able to scrape a source and get articles from it, a
     *   `[ ]` **Implement:** Create the API endpoint for user interactions.
 
 *   **Frontend: User Personalization**
-    *   `[ ]` **Test:** Write a failing test for a settings page component that allows users to edit their "interest" prompt.
-    *   `[ ]` **Implement:** Create the settings page.
+    *   `[x]` **Test:** Write a failing test for a settings page component that allows users to edit their "interest" prompt.
+    *   `[x]` **Implement:** Create the settings page.
     *   `[ ]` **Test:** Write a failing test to verify that liking/disliking an article updates the user's interest data model.
     *   `[ ]` **Implement:** Implement the logic to automatically update user preferences.
 

@@ -3,7 +3,7 @@ from typing import Dict, Any, Literal
 import datetime
 
 # Job status values: in_progress, completed, failed
-JobStatusType = Literal["in_progress", "completed", "failed"]
+JobStatusType = Literal["pending", "in_progress", "completed", "failed"]
 
 
 class ScrapeJob(BaseModel):

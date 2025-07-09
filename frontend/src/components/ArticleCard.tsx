@@ -52,6 +52,11 @@ export default function ArticleCard({ article, isRead = false, onReadStatusChang
     `}>
       <div className="flex justify-between items-start mb-2">
         <h2 className="text-xl font-bold text-gray-800 mb-2 flex-grow">{article.title}</h2>
+        {article.interest_score && (
+          <div className="text-sm text-gray-500 ml-4">
+            Interest Score: {article.interest_score}
+          </div>
+        )}
         <button
           onClick={toggleReadStatus}
           disabled={isUpdating}
