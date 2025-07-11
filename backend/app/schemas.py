@@ -13,9 +13,14 @@ class ScrapeJob(BaseModel):
 
 class JobStatus(BaseModel):
     id: str
-    status: JobStatusType
+    status: Literal["pending", "in_progress", "completed", "failed", "canceled"]
     progress: int
     message: str
+    total_sources: int = 0
+    processed_sources: int = 0
+    total_articles: int = 0
+    processed_articles: int = 0
+    eta_seconds: float = -1.0
 
 
 class ArticleBase(BaseModel):

@@ -16,12 +16,21 @@ My highest priority is to be able to scrape a source and get articles from it, a
 
 ## Issues
 
-* [-] - The scraping process can take a long time and currently the HTTP post has to wait for it; we may want this to be async and we may want the UI to have some kind of feedback about progress
+* [ ] - Marking an article read throws an error
+* [ ] - Categories are not working? (Not appearing in the UI, can't filter by category etc. - they seem to be in the DB though)
+* [x] - We may want to overhaul job handling (see next issue). The UI should be able to cancel a job at least.
+* [x] - The scraping process can take a long time and currently the HTTP post has to wait for it; we may want this to be async and we may want the UI to have some kind of feedback about progress
     - This is partially done but it looks like clicking an individual Scrape button for a source does not use the progress indicator.
     - I really would like a progress bar or some other sort of indication of what's going on; this does not appear to be working right now?
     - This has gotten really bad! Scraping and processing articles takes half an hour or more and the UI is completely blocked in the meantime?
+* [ ] - The scraping progress indicator should show how many articles have been skipped (duplicates) or were not processed because of an error
 * [ ] - Remove outdated user table; this is a single user application. We will probably need a place to store settings though.
 * [ ] - Clickbait titles. I hate clickbait titles. Perhaps we should replace titles with generated ones that are more accurate and not clickbaity.
+
+## Technical Debt & Test Improvements
+
+*   `[ ]` **Improve Background Job Tests:** The test for bulk article scoring (`test_bulk_article_scoring`) is inadequate. It should be updated to test the full lifecycle of the job (status polling, completion) to match the standard set by the scraping job test.
+*   `[ ]` **Add HTTP API Integration Tests:** The `test_scraping.py` file contains only pure unit tests. While valuable, they don't test the HTTP API layer. We should add integration tests that use the `client` to test the scraping endpoints directly, ensuring the full stack works as expected.
 
 ## Things to think about later
 

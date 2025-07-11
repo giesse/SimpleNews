@@ -104,11 +104,14 @@ export function deleteSource(id: number): Promise<Source> {
 // Scraping API
 export interface ScrapeJob {
   id: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'canceled';
   progress: number;
   message: string;
-  created_at: string;
-  completed_at?: string;
+  total_sources: number;
+  processed_sources: number;
+  total_articles: number;
+  processed_articles: number;
+  eta_seconds: number;
 }
 
 export function scrapeSource(id: number): Promise<{ job_id: string; message: string }> {
@@ -117,13 +120,18 @@ export function scrapeSource(id: number): Promise<{ job_id: string; message: str
   });
 }
 
-// Note: The backend would need to implement this endpoint
 export function getScrapeJobStatus(jobId: string): Promise<ScrapeJob> {
-  return fetcher<ScrapeJob>(`/scrape/jobs/${jobId}`);
+  return fetcher<ScrapeJob>(`/sources/scrape/status/${jobId}`);
 }
 
 export function scrapeAllSources(): Promise<{ job_id: string; message: string }> {
   return fetcher<{ job_id: string; message: string }>(`/sources/scrape`, {
+    method: 'POST',
+  });
+}
+
+export function cancelScrapeJob(jobId: string): Promise<{ message: string }> {
+  return fetcher<{ message: string }>(`/sources/scrape/cancel/${jobId}`, {
     method: 'POST',
   });
 }

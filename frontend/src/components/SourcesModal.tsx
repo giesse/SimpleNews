@@ -1,11 +1,9 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Modal from './Modal';
 import SourceList from './SourceList';
 import SourceForm from './SourceForm';
-import LoadingIndicator from './LoadingIndicator';
-import { scrapeAllSources, getScrapeJobStatus, ScrapeJob } from '@/lib/api';
+import ScrapingProgress from './ScrapingProgress';
+import { scrapeAllSources, getScrapeJobStatus, cancelScrapeJob, ScrapeJob } from '@/lib/api';
 
 interface SourcesModalProps {
   isOpen: boolean;
@@ -13,77 +11,64 @@ interface SourcesModalProps {
 }
 
 export default function SourcesModal({ isOpen, onClose }: SourcesModalProps) {
-  // This state is used to trigger a re-render of the SourceList
   const [key, setKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+  const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' | 'info' } | null>(null);
   const [scrapeJob, setScrapeJob] = useState<ScrapeJob | null>(null);
-  const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
 
-  // Clean up polling interval when component unmounts
-  useEffect(() => {
-    return () => {
-      if (pollInterval) {
-        clearInterval(pollInterval);
-      }
-    };
-  }, [pollInterval]);
+  const pollJobStatus = useCallback(async (jobId: string) => {
+    try {
+      const updatedJob = await getScrapeJobStatus(jobId);
+      setScrapeJob(updatedJob);
 
-  // Poll for job status updates when there's an active job
-  useEffect(() => {
-    if (scrapeJob && scrapeJob.status !== 'completed' && scrapeJob.status !== 'failed') {
-      const interval = setInterval(async () => {
-        try {
-          const updatedJob = await getScrapeJobStatus(scrapeJob.id);
-          setScrapeJob(updatedJob);
-          
-          if (updatedJob.status === 'completed' || updatedJob.status === 'failed') {
-            clearInterval(interval);
-            setPollInterval(null);
-            setIsLoading(false);
-            
-            // Update message based on job status
-            setMessage({ 
-              text: updatedJob.message || (updatedJob.status === 'completed' 
-                ? 'Scraping completed successfully!' 
-                : 'Scraping failed.'),
-              type: updatedJob.status === 'completed' ? 'success' : 'error'
-            });
-            
-            // Refresh source list if scraping was successful
-            if (updatedJob.status === 'completed') {
-              setKey(prevKey => prevKey + 1);
-            }
-          }
-        } catch (error) {
-          console.error('Error polling for job status:', error);
+      if (updatedJob.status === 'completed' || updatedJob.status === 'failed' || updatedJob.status === 'canceled') {
+        setIsLoading(false);
+        setMessage({
+          text: updatedJob.message || 'Job finished.',
+          type: updatedJob.status === 'completed' ? 'success' : (updatedJob.status === 'failed' ? 'error' : 'info'),
+        });
+        if (updatedJob.status === 'completed') {
+          setKey(prevKey => prevKey + 1); // Refresh source list
         }
-      }, 2000); // Poll every 2 seconds
-      
-      setPollInterval(interval);
-      return () => clearInterval(interval);
+      } else {
+        // Keep polling
+        setTimeout(() => pollJobStatus(jobId), 2000);
+      }
+    } catch (error) {
+      console.error('Error polling for job status:', error);
+      setIsLoading(false);
+      setMessage({ text: 'Error checking job status.', type: 'error' });
     }
-  }, [scrapeJob]);
+  }, []);
 
   async function handleScrapeAll() {
     try {
       setIsLoading(true);
       setMessage(null);
+      setScrapeJob(null);
       const result = await scrapeAllSources();
       
-      // If the backend returns a job_id, set up polling for progress
       if (result.job_id) {
-        const initialJob = await getScrapeJobStatus(result.job_id);
-        setScrapeJob(initialJob);
+        pollJobStatus(result.job_id);
       } else {
-        // Legacy support for backends without job tracking
         setMessage({ text: result.message || 'Scraping initiated.', type: 'success' });
         setKey(prevKey => prevKey + 1);
         setIsLoading(false);
       }
-    } catch {
+    } catch (error) {
       setMessage({ text: 'Failed to trigger scrape for all sources.', type: 'error' });
       setIsLoading(false);
+    }
+  }
+
+  async function handleCancelScrape() {
+    if (!scrapeJob || !isLoading) return;
+
+    try {
+      await cancelScrapeJob(scrapeJob.id);
+      setMessage({ text: 'Cancellation request sent.', type: 'info' });
+    } catch (error) {
+      setMessage({ text: 'Failed to send cancellation request.', type: 'error' });
     }
   }
 
@@ -92,7 +77,11 @@ export default function SourcesModal({ isOpen, onClose }: SourcesModalProps) {
       <div className="space-y-6">
         {message && (
           <div 
-            className={`p-4 rounded-md ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}
+            className={`p-4 rounded-md ${
+              message.type === 'success' ? 'bg-green-50 text-green-800' :
+              message.type === 'error' ? 'bg-red-50 text-red-800' :
+              'bg-blue-50 text-blue-800'
+            }`}
             role="alert"
           >
             {message.text}
@@ -113,13 +102,17 @@ export default function SourcesModal({ isOpen, onClose }: SourcesModalProps) {
           </button>
         </div>
         
-        {/* Scraping progress indicator */}
         {isLoading && scrapeJob && (
           <div className="bg-blue-50 p-4 rounded-md">
-            <LoadingIndicator 
-              progress={scrapeJob.progress} 
-              message={scrapeJob.message || 'Scraping sources...'}
-            />
+            <ScrapingProgress job={scrapeJob} />
+            <div className="flex justify-end mt-2">
+              <button
+                onClick={handleCancelScrape}
+                className="px-3 py-1 rounded-md text-sm font-medium bg-red-600 text-white hover:bg-red-700"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         )}
         

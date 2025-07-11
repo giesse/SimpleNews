@@ -2,19 +2,18 @@ from fastapi import Depends, FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Dict
+import time
 import uuid
 import asyncio
 import requests
 
 from . import llm_interface, crud, models, schemas, scraping
 from .database import SessionLocal, engine
+from .shared_state import job_statuses, canceled_jobs
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
-# In-memory store for job statuses
-job_statuses: Dict[str, schemas.JobStatus] = {}
 
 origins = [
     "http://localhost:3000",
@@ -38,38 +37,107 @@ def get_db():
         db.close()
 
 
-async def run_scraping_job(job_id: str, db: Session):
+def run_scraping_job(job_id: str, db: Session = None):
     """
     The actual scraping logic that runs in the background.
     """
+    start_time = time.time()
+
+    if db is None:
+        db = SessionLocal()
+
+    print(f"JOB {job_id}: Starting.")
     job_statuses[job_id] = schemas.JobStatus(
-        id=job_id, status="in_progress", progress=0, message="Initializing..."
+        id=job_id, status="pending", progress=0, message="Initializing..."
     )
 
     try:
         sources = crud.get_sources(db)
         total_sources = len(sources)
+        print(f"JOB {job_id}: Found {total_sources} sources.")
 
+        # --- Pre-computation Step ---
+        # First, get all article links to calculate a true total for progress tracking
+        all_articles_to_scrape = []
         for i, source in enumerate(sources):
-            progress = int(((i + 1) / total_sources) * 100)
-            job_statuses[job_id] = schemas.JobStatus(
-                id=job_id,
-                status="in_progress",
-                progress=progress,
-                message=f"Scraping {source.name}...",
-            )
-            scraping.scrape_source(db=db, source=source)
-            await asyncio.sleep(1)  # Yield control to the event loop
+            print(f"JOB {job_id}: Pre-scanning source {i+1}/{total_sources}: {source.name}")
+            article_links = scraping.get_article_links(source)
+            for link in article_links:
+                # Avoid adding duplicates from the same run
+                if link not in [l for _, l in all_articles_to_scrape]:
+                    all_articles_to_scrape.append((source, link))
+        
+        total_articles = len(all_articles_to_scrape)
+        print(f"JOB {job_id}: Found a total of {total_articles} new articles to scrape across {total_sources} sources.")
 
+        processed_articles_count = 0
+
+        # --- Progress Update Callback ---
+        def update_progress(articles_processed_in_source=0):
+            nonlocal processed_articles_count
+            processed_articles_count += articles_processed_in_source
+
+            progress = int((processed_articles_count / total_articles) * 100) if total_articles > 0 else 0
+            
+            elapsed_time = time.time() - start_time
+            eta_seconds = (elapsed_time / processed_articles_count) * (total_articles - processed_articles_count) if processed_articles_count > 0 else -1.0
+
+            job_statuses[job_id].progress = progress
+            job_statuses[job_id].total_articles = total_articles
+            job_statuses[job_id].processed_articles = processed_articles_count
+            job_statuses[job_id].eta_seconds = eta_seconds
+            job_statuses[job_id].message = f"Scraped {processed_articles_count}/{total_articles} articles..."
+
+
+        job_statuses[job_id].status = "in_progress"
+        job_statuses[job_id].total_sources = total_sources
+
+        # --- Main Processing Loop ---
+        for i, source in enumerate(sources):
+            job_statuses[job_id].processed_sources = i
+            job_statuses[job_id].message = f"Processing source {i+1}/{total_sources}: {source.name}"
+
+            # Check for cancellation before processing each source
+            if job_id in canceled_jobs:
+                print(f"JOB {job_id}: Cancellation detected. Terminating.")
+                job_statuses[job_id].status = "canceled"
+                job_statuses[job_id].message = "Job canceled by user."
+                canceled_jobs.remove(job_id)
+                return
+
+            # Get the links for the current source that were pre-scanned
+            links_for_current_source = [link for s, link in all_articles_to_scrape if s.id == source.id]
+
+            canceled = scraping.scrape_source(
+                db=db, 
+                source=source, 
+                job_id=job_id, 
+                article_links=links_for_current_source,
+                update_progress_callback=update_progress
+            )
+
+            if canceled:
+                if job_id in canceled_jobs:
+                    print(f"JOB {job_id}: Cancellation confirmed. Terminating.")
+                    job_statuses[job_id].status = "canceled"
+                    job_statuses[job_id].message = "Job canceled by user."
+                    canceled_jobs.remove(job_id)
+                return
+            
+            print(f"JOB {job_id}: Finished scrape for source: {source.name}")
+
+        print(f"JOB {job_id}: All sources processed. Completing job.")
         job_statuses[job_id] = schemas.JobStatus(
             id=job_id, status="completed", progress=100, message="Scraping complete!"
         )
 
     except Exception as e:
+        print(f"JOB {job_id}: An error occurred: {e}")
         job_statuses[job_id] = schemas.JobStatus(
             id=job_id, status="failed", progress=0, message=f"An error occurred: {e}"
         )
     finally:
+        print(f"JOB {job_id}: Closing database session.")
         db.close()
 
 
@@ -167,11 +235,9 @@ def scrape_source(source_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/sources/scrape", response_model=schemas.ScrapeJob, status_code=202)
-def scrape_all_sources(
-    background_tasks: BackgroundTasks, db: Session = Depends(get_db)
-):
+def scrape_all_sources(background_tasks: BackgroundTasks):
     job_id = str(uuid.uuid4())
-    background_tasks.add_task(run_scraping_job, job_id, db)
+    background_tasks.add_task(run_scraping_job, job_id)
     return schemas.ScrapeJob(job_id=job_id, message="Scraping job initiated")
 
 
@@ -181,6 +247,19 @@ def get_scrape_job_status(job_id: str):
     if not status:
         raise HTTPException(status_code=404, detail="Job not found")
     return status
+
+
+@app.post("/sources/scrape/cancel/{job_id}", status_code=200)
+def cancel_scrape_job(job_id: str):
+    if job_id not in job_statuses or job_statuses[job_id].status not in [
+        "in_progress",
+        "pending",
+    ]:
+        raise HTTPException(
+            status_code=404, detail="Job not found or cannot be canceled."
+        )
+    canceled_jobs.add(job_id)
+    return {"message": "Scraping job cancellation requested."}
 
 
 @app.post("/sources/autodetect-selector", response_model=dict)
@@ -246,7 +325,9 @@ def calculate_article_score(article_id: int, db: Session = Depends(get_db)):
     }
 
 
-@app.post("/articles/recalculate-scores", response_model=schemas.ScrapeJob, status_code=202)
+@app.post(
+    "/articles/recalculate-scores", response_model=schemas.ScrapeJob, status_code=202
+)
 def recalculate_all_article_scores(
     background_tasks: BackgroundTasks, db: Session = Depends(get_db)
 ):
@@ -256,11 +337,14 @@ def recalculate_all_article_scores(
     """
     job_id = str(uuid.uuid4())
     job_statuses[job_id] = schemas.JobStatus(
-        id=job_id, status="pending", progress=0, message="Initializing score recalculation..."
+        id=job_id,
+        status="pending",
+        progress=0,
+        message="Initializing score recalculation...",
     )
-    
+
     background_tasks.add_task(run_article_scoring_job, job_id, db)
-    
+
     return schemas.ScrapeJob(job_id=job_id, message="Article scoring job initiated")
 
 
@@ -269,7 +353,10 @@ async def run_article_scoring_job(job_id: str, db: Session):
     Background task that recalculates interest scores for all articles.
     """
     job_statuses[job_id] = schemas.JobStatus(
-        id=job_id, status="in_progress", progress=0, message="Starting article scoring..."
+        id=job_id,
+        status="in_progress",
+        progress=0,
+        message="Starting article scoring...",
     )
 
     try:
@@ -277,7 +364,7 @@ async def run_article_scoring_job(job_id: str, db: Session):
         articles = crud.get_articles(db)
         total_articles = len(articles)
         interest_prompt = crud.get_interest_prompt(db)
-        
+
         for i, article in enumerate(articles):
             # Update progress
             progress = int(((i + 1) / total_articles) * 100)
@@ -287,25 +374,27 @@ async def run_article_scoring_job(job_id: str, db: Session):
                 progress=progress,
                 message=f"Scoring article {i+1} of {total_articles}...",
             )
-            
+
             # Calculate score
             interest_score = llm_interface.generate_interest_score(
-                article_text=article.original_content, 
-                user_interest_prompt=interest_prompt
+                article_text=article.original_content,
+                user_interest_prompt=interest_prompt,
             )
-            
+
             # Update article in DB
             crud.update_article_interest_score(
                 db, article_id=article.id, interest_score=interest_score
             )
-            
+
             # Yield control periodically
             if i % 5 == 0:  # Every 5 articles
                 await asyncio.sleep(0.1)
-        
+
         job_statuses[job_id] = schemas.JobStatus(
-            id=job_id, status="completed", progress=100, 
-            message=f"Successfully scored {total_articles} articles!"
+            id=job_id,
+            status="completed",
+            progress=100,
+            message=f"Successfully scored {total_articles} articles!",
         )
 
     except Exception as e:
