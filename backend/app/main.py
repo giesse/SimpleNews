@@ -37,7 +37,7 @@ def get_db():
         db.close()
 
 
-def run_scraping_job(job_id: str, db: Session = None):
+def run_scraping_job(job_id: str, db: Session = None, source_id: int | None = None):
     """
     The actual scraping logic that runs in the background.
     """
@@ -52,7 +52,10 @@ def run_scraping_job(job_id: str, db: Session = None):
     )
 
     try:
-        sources = crud.get_sources(db)
+        sources = crud.get_sources(db) if source_id is None else [crud.get_source(db, source_id)]
+        if not sources or sources[0] is None:
+            raise HTTPException(status_code=404, detail="Source not found")
+
         total_sources = len(sources)
         print(f"JOB {job_id}: Found {total_sources} sources.")
 
@@ -163,6 +166,16 @@ def read_articles(
     return articles
 
 
+@app.patch("/articles/{article_id}/read-status", response_model=schemas.Article)
+def mark_article_read_status(
+    article_id: int, read_status: schemas.ArticleReadStatus, db: Session = Depends(get_db)
+):
+    db_article = crud.mark_article_read(db, article_id=article_id, read=read_status.read)
+    if db_article is None:
+        raise HTTPException(status_code=404, detail="Article not found")
+    return db_article
+
+
 @app.post("/articles/{article_id}/process", status_code=200)
 def process_article(article_id: int, db: Session = Depends(get_db)):
     db_article = crud.get_article(db, article_id=article_id)
@@ -226,12 +239,15 @@ def delete_source(source_id: int, db: Session = Depends(get_db)):
     return db_source
 
 
-@app.post("/sources/{source_id}/scrape", status_code=200)
-def scrape_source(source_id: int, db: Session = Depends(get_db)):
+@app.post("/sources/{source_id}/scrape", response_model=schemas.ScrapeJob, status_code=202)
+def scrape_source(source_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     db_source = crud.get_source(db, source_id=source_id)
     if db_source is None:
         raise HTTPException(status_code=404, detail="Source not found")
-    return scraping.scrape_source(db=db, source=db_source)
+
+    job_id = str(uuid.uuid4())
+    background_tasks.add_task(run_scraping_job, job_id, db, source_id=source_id)
+    return schemas.ScrapeJob(job_id=job_id, message="Scraping job initiated for single source")
 
 
 @app.post("/sources/scrape", response_model=schemas.ScrapeJob, status_code=202)
@@ -260,6 +276,12 @@ def cancel_scrape_job(job_id: str):
         )
     canceled_jobs.add(job_id)
     return {"message": "Scraping job cancellation requested."}
+
+
+@app.get("/categories/", response_model=List[schemas.Category])
+def read_categories(db: Session = Depends(get_db)):
+    categories = crud.get_categories(db)
+    return categories
 
 
 @app.post("/sources/autodetect-selector", response_model=dict)

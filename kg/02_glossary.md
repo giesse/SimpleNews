@@ -8,8 +8,8 @@ This document defines key terms and acronyms used throughout the Personalized Ne
 *   **Devcontainer (Development Container):** A Docker container configured to provide a consistent and fully-featured development environment.
 *   **FastAPI:** A modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints.
 *   **Frontend:** The user interface part of the application, built with Next.js in this project.
-*   **Gemma:** A family of lightweight, state-of-the-art open models from Google. (Initially considered, later replaced by Gemini API).
-*   **Gemini API:** Google's API for accessing its multimodal AI models. Used in this project for summarizing and categorizing articles.
+*   **Gemma:** A family of lightweight, state-of-the-art open models from Google. This project uses the Gemma model via the Gemini API.
+*   **Gemini API:** Google's API for accessing its multimodal AI models. This project uses the Gemini API to access the Gemma model for summarization and categorization.
 *   **Git:** A distributed version control system.
 *   **HTML (HyperText Markup Language):** The standard markup language for documents designed to be displayed in a web browser.
 *   **Interest Prompt:** A text input provided by the user to define their specific interests, used to personalize the news feed.

@@ -82,10 +82,10 @@ def test_scrape_job_cancellation(db: Session, requests_mock: requests_mock.Mocke
     
     original_scrape_html_source = scraping._scrape_html_source
 
-    def cancellable_scrape_html_source(db, source, job_id):
+    def cancellable_scrape_html_source(db, source, job_id, article_links, update_progress_callback=None):
         # Process one article, then set the job to canceled
         canceled_jobs.add(job_id)
-        return original_scrape_html_source(db, source, job_id)
+        return original_scrape_html_source(db, source, job_id, article_links, update_progress_callback)
 
     with patch("app.scraping._scrape_html_source", side_effect=cancellable_scrape_html_source) as mock_scrape:
         # 3. Start the job

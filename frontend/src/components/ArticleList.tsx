@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { getArticles } from '@/lib/api';
+import { getArticles, getCategories } from '@/lib/api';
 import { Article, Category } from '@/lib/types';
 import ArticleCard from './ArticleCard';
 import LoadingIndicator from './LoadingIndicator';
@@ -83,27 +83,13 @@ function FilterBar({
 
 export default function ArticleList() {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [readArticleIds, setReadArticleIds] = useState<Set<number>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showReadArticles, setShowReadArticles] = useState(true);
   const [minScore, setMinScore] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Extract unique categories from all articles
-  const allCategories = useMemo(() => {
-    const categoriesMap = new Map<number, Category>();
-    
-    articles.forEach(article => {
-      if (article.categories) {
-        article.categories.forEach(category => {
-          categoriesMap.set(category.id, category);
-        });
-      }
-    });
-    
-    return Array.from(categoriesMap.values());
-  }, [articles]);
 
   // Handle marking an article as read/unread
   const handleReadStatusChange = (articleId: number, isRead: boolean) => {
@@ -119,36 +105,40 @@ export default function ArticleList() {
   };
 
   useEffect(() => {
-    async function loadArticles() {
+    async function loadData() {
       try {
         setLoading(true);
-        
-        // Use the API with server-side filtering
-        const data = await getArticles({
+
+        // Fetch categories only if they haven't been loaded yet.
+        if (allCategories.length === 0) {
+          const categories = await getCategories();
+          setAllCategories(categories);
+        }
+
+        const articles = await getArticles({
           category_id: selectedCategory || undefined,
           read: showReadArticles ? undefined : false,
           min_score: minScore > 0 ? minScore : undefined,
         });
-        
-        setArticles(data);
-        
-        // Update read status in local state based on server data
+
+        setArticles(articles);
+
         const newReadArticleIds = new Set<number>();
-        data.forEach(article => {
+        articles.forEach(article => {
           if (article.read) {
             newReadArticleIds.add(article.id);
           }
         });
         setReadArticleIds(newReadArticleIds);
+
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred.');
       } finally {
         setLoading(false);
       }
     }
-    
-    loadArticles();
-    // Re-fetch when filters change or when coming back to the component
+
+    loadData();
   }, [selectedCategory, showReadArticles, minScore]);
 
   if (loading) {
@@ -177,7 +167,7 @@ export default function ArticleList() {
     );
   }
 
-  if (articles.length === 0) {
+  if (articles.length === 0 && selectedCategory === '' && minScore === 0 && showReadArticles === true) {
     return (
       <div className="bg-white border rounded-lg p-8 text-center">
         <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

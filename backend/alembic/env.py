@@ -5,6 +5,12 @@ from sqlalchemy import pool
 
 from alembic import context
 
+# Add the project root to the Python path
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -17,7 +23,8 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 # for 'autogenerate' support
 from app.database import Base  # Import your Base
-from app import models  # Import your models to ensure they are registered with Base.metadata
+from app import models
+
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -64,9 +71,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

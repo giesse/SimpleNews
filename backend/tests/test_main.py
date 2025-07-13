@@ -103,3 +103,74 @@ async def test_source_crud(client, db):
     # Verify deletion
     response = await client.get(f"/sources/{source_id}")
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_read_categories(client, db):
+    """
+    Test the endpoint for reading categories.
+    """
+    # 1. Create a mock source and article
+    source_in = schemas.SourceCreate(name="Test Source", url="http://test.com")
+    db_source = crud.create_source(db=db, source=source_in)
+    article_in = schemas.ArticleCreate(
+        url="http://example.com/test-article",
+        title="Test Article",
+        original_content="Some content",
+        source_id=db_source.id,
+    )
+    db_article = crud.create_article(db=db, article=article_in)
+
+    # 2. Create some categories in the database
+    crud.link_categories_to_article(db, article_id=db_article.id, categories=["Tech", "Science"])
+
+    # 3. Send a GET request to the endpoint
+    response = await client.get("/categories/")
+
+    # 4. Assert the response
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert {cat['name'] for cat in data} == {"Tech", "Science"}
+
+
+@pytest.mark.asyncio
+async def test_mark_article_read(client, db):
+    """
+    Test marking an article as read.
+    """
+    # 1. Create a mock source and article
+    source_in = schemas.SourceCreate(name="Test Source", url="http://test.com")
+    db_source = crud.create_source(db=db, source=source_in)
+    article_in = schemas.ArticleCreate(
+        url="http://example.com/test-article",
+        title="Test Article",
+        original_content="Some content",
+        source_id=db_source.id,
+    )
+    db_article = crud.create_article(db=db, article=article_in)
+    assert db_article.read is False  # Initially, article is unread
+
+    # 2. Mark the article as read
+    response = await client.patch(
+        f"/articles/{db_article.id}/read-status", json={"read": True}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["read"] is True
+
+    # 3. Verify the change in the database
+    updated_article = crud.get_article(db, article_id=db_article.id)
+    assert updated_article.read is True
+
+    # 4. Mark the article as unread
+    response = await client.patch(
+        f"/articles/{db_article.id}/read-status", json={"read": False}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["read"] is False
+
+    # 5. Verify the change in the database
+    updated_article = crud.get_article(db, article_id=db_article.id)
+    assert updated_article.read is False

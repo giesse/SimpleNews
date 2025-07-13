@@ -92,6 +92,27 @@ def link_categories_to_article(db: Session, article_id: int, categories: List[st
     return db_article
 
 
+def mark_article_read(db: Session, article_id: int, read: bool):
+    """
+    Mark an article as read or unread.
+
+    Args:
+        db: Database session
+        article_id: ID of the article to update
+        read: Boolean indicating the read status
+
+    Returns:
+        The updated article or None if not found
+    """
+    db_article = get_article(db, article_id)
+    if db_article:
+        db_article.read = read
+        db.add(db_article)
+        db.commit()
+        db.refresh(db_article)
+    return db_article
+
+
 def create_source(db: Session, source: schemas.SourceCreate):
     db_source = models.Source(**source.model_dump())
     db.add(db_source)
@@ -187,3 +208,7 @@ def delete_source(db: Session, source_id: int):
         db.delete(db_source)
         db.commit()
     return db_source
+
+def get_categories(db: Session) -> List[models.Category]:
+    """Get all categories."""
+    return db.query(models.Category).all()

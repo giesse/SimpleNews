@@ -41,9 +41,21 @@ class Article(ArticleBase):
     id: int
     source_id: int
     created_at: datetime.datetime
+    read: bool
     interest_score: int | None = None
 
     model_config = {"from_attributes": True}
+
+
+class Category(BaseModel):
+    id: int
+    name: str
+
+    model_config = {"from_attributes": True}
+
+
+class ArticleReadStatus(BaseModel):
+    read: bool
 
 
 class SourceBase(BaseModel):

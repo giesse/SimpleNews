@@ -165,7 +165,13 @@ def scrape_source(db: Session, source: models.Source, job_id: str | None = None,
     print(f"Initiating scrape for source '{source.name}' with type '{scraper_type}'")
 
     if scraper_type == "HTML":
-        canceled = _scrape_html_source(db, source, job_id=job_id, article_links=article_links, update_progress_callback=update_progress_callback)
+        # If article links are not provided, fetch them now.
+        # This allows for both pre-scanning (in a job) and direct scraping.
+        links_to_scrape = article_links
+        if links_to_scrape is None:
+            links_to_scrape = get_article_links(source)
+
+        canceled = _scrape_html_source(db, source, job_id=job_id, article_links=links_to_scrape, update_progress_callback=update_progress_callback)
         if canceled:
             return True
     else:

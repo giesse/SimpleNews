@@ -6,6 +6,8 @@ import { Source } from '@/lib/types';
 import SourceForm from './SourceForm';
 import LoadingIndicator from './LoadingIndicator';
 
+import ScrapingProgress from './ScrapingProgress';
+
 interface ScrapeProgress {
   sourceId: number;
   job: ScrapeJob;
@@ -206,11 +208,7 @@ export default function SourceList() {
               {/* Scraping progress indicator */}
               {isScraping && scrapeProgress && (
                 <div className="mt-3 w-full">
-                  <LoadingIndicator 
-                    size="small"
-                    progress={scrapeProgress.job.progress} 
-                    message={scrapeProgress.job.message || 'Scraping in progress...'}
-                  />
+                  <ScrapingProgress job={scrapeProgress.job} />
                 </div>
               )}
             </div>

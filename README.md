@@ -1,20 +1,20 @@
 # Personalized News Aggregator
 
-This project is a personalized news aggregator that scans websites, summarizes new articles using a local LLM (Gemma), and displays them based on user interests. The goal is to create a smart, self-hosted news feed that adapts to your preferences.
+This project is a personalized news aggregator that scans websites, summarizes new articles using the Gemma LLM via the Google Gemini API, and displays them based on user interests. The goal is to create a smart, self-hosted news feed that adapts to your preferences.
 
 This document serves as the main entry point for the project. For more detailed information, please refer to the project's [Knowledge Graph](./kg/root.md).
 
 ## Current Status
 
-The project has a solid foundation on the backend, with the database models and basic API endpoints established. The frontend is a basic Next.js application that can display articles. The core business logic, including web scraping and LLM interaction, is partially implemented.
+The project is in a functional state. The backend supports scraping, article processing, and filtering. The frontend allows users to view articles, filter them by category, read status, and interest score, and monitor scraping progress.
 
 | Component | Plan | Status | Notes |
 | :--- | :--- | :--- | :--- |
-| **Backend** | Python with FastAPI | ✅ Implemented | The FastAPI application is set up with basic CRUD endpoints for articles. |
-| **Frontend** | TypeScript with Next.js | ✅ Implemented (Basic) | A Next.js application has been initialized and can display articles. |
-| **Database** | SQLite (dev), PostgreSQL (prod) | ✅ Implemented (Models) | The SQLAlchemy models in `backend/app/models.py` align with the project plan. |
-| **Web Scraping** | `requests` & `BeautifulSoup` | ✅ Implemented (Basic) | The necessary libraries are in `requirements.txt`, and a basic HTML scraper is implemented. |
-| **LLM Interface** | Google Gemini API | ✅ Implemented (Basic) | The `google-generativeai` library is included, and a basic interface for the LLM is built. |
+| **Backend** | Python with FastAPI | ✅ Implemented | The FastAPI application is set up with CRUD endpoints for articles, sources, and categories. |
+| **Frontend** | TypeScript with Next.js | ✅ Implemented | A Next.js application has been implemented with filtering, real-time scraping progress, and a settings modal. |
+| **Database** | SQLite (dev), PostgreSQL (prod) | ✅ Implemented (Models) | The SQLAlchemy models in `backend/app/models.py` are up-to-date. The User model has been removed. |
+| **Web Scraping** | `requests` & `BeautifulSoup` | ✅ Implemented | The scraping logic is functional and runs as a background job. |
+| **LLM Interface** | Google Gemini API | ✅ Implemented | The `google-generativeai` library is used to interact with the Gemma model. |
 
 
 *For a detailed list of pending tasks, see the [Work Backlog](./kg/03_work_backlog.md).*

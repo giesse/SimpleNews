@@ -29,14 +29,6 @@ class Settings(Base):
     value = Column(Text)
 
 
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    interest_prompt = Column(Text)
-    interactions = relationship("UserArticleInteraction", back_populates="user")
-
-
 class Source(Base):
     __tablename__ = "sources"
     id = Column(Integer, primary_key=True, index=True)
@@ -54,12 +46,12 @@ class Article(Base):
     source_id = Column(Integer, ForeignKey("sources.id"))
     url = Column(String, unique=True, index=True)
     title = Column(String)
+    read = Column(Boolean, default=False, nullable=False)
     original_content = Column(Text)
     summary = Column(Text)
     interest_score = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     source = relationship("Source", back_populates="articles")
-    interactions = relationship("UserArticleInteraction", back_populates="article")
     categories = relationship(
         "Category", secondary=article_categories, back_populates="articles"
     )
@@ -72,14 +64,3 @@ class Category(Base):
     articles = relationship(
         "Article", secondary=article_categories, back_populates="categories"
     )
-
-
-class UserArticleInteraction(Base):
-    __tablename__ = "user_article_interactions"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    article_id = Column(Integer, ForeignKey("articles.id"))
-    liked = Column(Boolean)
-    question = Column(Text)
-    user = relationship("User", back_populates="interactions")
-    article = relationship("Article", back_populates="interactions")

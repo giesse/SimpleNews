@@ -1,3 +1,15 @@
+export interface ScrapeJob {
+  id: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'canceled';
+  progress: number;
+  message: string;
+  total_sources: number;
+  processed_sources: number;
+  total_articles: number;
+  processed_articles: number;
+  eta_seconds: number;
+}
+
 export interface Category {
   id: number;
   name: string;
