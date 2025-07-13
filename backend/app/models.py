@@ -12,7 +12,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm import declarative_base
 import datetime
-Base = declarative_base()
+from .database import Base
 
 article_categories = Table(
     "article_categories",
