@@ -231,5 +231,5 @@ def delete_source(db: Session, source_id: int):
     return db_source
 
 def get_categories(db: Session) -> List[models.Category]:
-    """Get all categories."""
-    return db.query(models.Category).all()
+    """Get all categories, sorted alphabetically."""
+    return db.query(models.Category).order_by(models.Category.name).all()
