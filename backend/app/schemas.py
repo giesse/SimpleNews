@@ -29,6 +29,7 @@ class ArticleBase(BaseModel):
     original_content: str | None = None
     summary: str | None = None
     interest_score: int | None = None
+    read: bool = False
 
 
 class ArticleCreate(ArticleBase):

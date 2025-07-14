@@ -8,8 +8,28 @@ def get_article_by_url(db: Session, url: str):
     return db.query(models.Article).filter(models.Article.url == url).first()
 
 
-def get_articles(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Article).offset(skip).limit(limit).all()
+def get_articles(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    category_id: int = None,
+    read: bool = None,
+    min_score: int = None,
+):
+    query = db.query(models.Article)
+
+    if category_id is not None:
+        query = query.join(models.article_categories).filter(
+            models.article_categories.c.category_id == category_id
+        )
+
+    if read is not None:
+        query = query.filter(models.Article.read == read)
+
+    if min_score is not None:
+        query = query.filter(models.Article.interest_score >= min_score)
+
+    return query.offset(skip).limit(limit).all()
 
 
 def get_article(db: Session, article_id: int):
@@ -23,6 +43,7 @@ def create_article(db: Session, article: schemas.ArticleCreate):
         original_content=article.original_content,
         summary=article.summary,
         source_id=article.source_id,
+        read=article.read,
     )
     db.add(db_article)
     db.commit()

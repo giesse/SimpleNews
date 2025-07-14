@@ -10,8 +10,9 @@ This document lists the remaining tasks required to complete the project. It is 
 ## Issues
 
 * [x] - In the main page, the default for the filters should be: All categories, Unread only, Minimum score: 75
-* [ ] - The "Unread only" filter does not work
-* [ ] - Filtering by category also doesn't work; to be honest though, it would be more useful to me to be able to *exclude* some categories from the list (rather than just viewing the list for a specific category)
+* [x] - The "Unread only" filter does not work
+* [x] - Filtering by category also doesn't work
+* [ ] - Filtering by category: to be honest though, it would be more useful to me to be able to *exclude* some categories from the list (rather than just viewing the list for a specific category)
 * [ ] - The list of categories in the drop box is not in alphabetical order
 * [ ] - The article card does not show categories
 * [ ] - The scraping progress indicator should show how many articles have been skipped (duplicates) or were not processed because of an error; right now the progress bar does not move at all if articles are being skipped or can't be fetched because of an error

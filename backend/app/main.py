@@ -151,16 +151,21 @@ def create_article(article: schemas.ArticleCreate, db: Session = Depends(get_db)
 
 @app.get("/articles/", response_model=List[schemas.Article])
 def read_articles(
-    skip: int = 0, limit: int = 100, min_score: int = 0, db: Session = Depends(get_db)
+    skip: int = 0,
+    limit: int = 100,
+    category_id: int = None,
+    read: bool = None,
+    min_score: int = None,
+    db: Session = Depends(get_db),
 ):
-    articles = crud.get_articles(db, skip=skip, limit=limit)
-    # Filter by minimum interest score if provided
-    if min_score > 0:
-        articles = [
-            article
-            for article in articles
-            if article.interest_score and article.interest_score >= min_score
-        ]
+    articles = crud.get_articles(
+        db,
+        skip=skip,
+        limit=limit,
+        category_id=category_id,
+        read=read,
+        min_score=min_score,
+    )
     # Sort articles by interest score (highest first)
     articles.sort(key=lambda x: (x.interest_score or 0), reverse=True)
     return articles

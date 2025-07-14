@@ -174,3 +174,43 @@ async def test_mark_article_read(client, db):
     # 5. Verify the change in the database
     updated_article = crud.get_article(db, article_id=db_article.id)
     assert updated_article.read is False
+
+
+@pytest.mark.asyncio
+async def test_filter_articles_by_read_status(client, db):
+    """
+    Test filtering articles by their read status.
+    """
+    # 1. Create a mock source
+    source_in = schemas.SourceCreate(name="Test Source", url="http://test.com")
+    db_source = crud.create_source(db=db, source=source_in)
+
+    # 2. Create one read and one unread article
+    read_article_in = schemas.ArticleCreate(
+        url="http://example.com/read-article",
+        title="Read Article",
+        original_content="This article has been read.",
+        source_id=db_source.id,
+        read=True,
+    )
+    crud.create_article(db=db, article=read_article_in)
+
+    unread_article_in = schemas.ArticleCreate(
+        url="http://example.com/unread-article",
+        title="Unread Article",
+        original_content="This article has not been read.",
+        source_id=db_source.id,
+        read=False,
+    )
+    crud.create_article(db=db, article=unread_article_in)
+
+    # 3. Fetch unread articles
+    response = await client.get("/articles/", params={"read": False})
+
+    # 4. Assert the response
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert len(data) == 1
+    assert data[0]["title"] == "Unread Article"
+    assert data[0]["read"] is False
