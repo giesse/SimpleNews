@@ -99,3 +99,58 @@ def test_scrape_job_cancellation(db: Session, requests_mock: requests_mock.Mocke
         # 5. Verify that not all articles were created
         article_count = db.query(Article).count()
         assert article_count < 5
+
+
+def test_scrape_job_with_skipped_and_failed_articles(db: Session, requests_mock: requests_mock.Mocker):
+    """
+    Tests that the scraping job correctly tracks processed, skipped, and failed articles.
+    """
+    # 1. Create a source and a pre-existing article to simulate a duplicate
+    source = Source(
+        name="Test Skipped/Failed Source",
+        url="http://test-mixed.com",
+        scraper_type="HTML",
+        config={"article_link_selector": ".article-link"},
+    )
+    db.add(source)
+    db.commit()
+
+    existing_article = Article(
+        source_id=source.id,
+        url="http://test-mixed.com/article-duplicate",
+        title="Duplicate Article",
+        original_content="This article already exists.",
+    )
+    db.add(existing_article)
+    db.commit()
+
+    # 2. Mock the HTML pages
+    requests_mock.get("http://test-mixed.com", text='''
+        <a class="article-link" href="/article-success">Successful Article</a>
+        <a class="article-link" href="/article-duplicate">Duplicate Article</a>
+        <a class="article-link" href="/article-failure">Failed Article</a>
+    ''')
+    requests_mock.get("http://test-mixed.com/article-success", text='''
+        <html><head><title>Successful Article</title></head><body>Content</body></html>
+    ''')
+    requests_mock.get("http://test-mixed.com/article-duplicate", text='''
+        <html><head><title>Duplicate Article</title></head><body>Content</body></html>
+    ''')
+    # The "failed" article will return a 500 error
+    requests_mock.get("http://test-mixed.com/article-failure", status_code=500)
+
+    # 3. Mock the LLM interface
+    with patch("app.llm_interface.generate_summary_and_categories", return_value=("S", ["C"])):
+        # 4. Start the scraping job
+        job_id = "test-mixed-job"
+        run_scraping_job(job_id, db)
+
+        # 5. Check the final status
+        status = job_statuses.get(job_id)
+        assert status is not None
+        assert status.status == "completed"
+        assert status.total_articles == 3
+        assert status.processed_articles == 1
+        assert status.skipped_articles == 1
+        assert status.failed_articles == 1
+        assert status.progress == 100

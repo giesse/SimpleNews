@@ -95,7 +95,6 @@ def _scrape_html_source(db: Session, source: models.Source, job_id: str | None =
     """
     print(f"Scraping HTML source: {source.name}")
 
-    processed_articles = 0
     for link in article_links:
         if job_id and job_id in canceled_jobs:
             print(f"JOB {job_id}: Cancellation detected in scraping loop for source {source.name}. Stopping.")
@@ -104,12 +103,16 @@ def _scrape_html_source(db: Session, source: models.Source, job_id: str | None =
         # 1. Check for duplicates
         if crud.get_article_by_url(db, url=link):
             print(f"Skipping duplicate article: {link}")
+            if update_progress_callback:
+                update_progress_callback(processed=0, skipped=1, failed=0)
             continue
 
         # 2. Scrape the full article content
         print(f"Scraping new article: {link}")
         scraped_data = _scrape_article_content(link)
         if not scraped_data:
+            if update_progress_callback:
+                update_progress_callback(processed=0, skipped=0, failed=1)
             continue
 
         # 3. Create the article in the database
@@ -149,9 +152,8 @@ def _scrape_html_source(db: Session, source: models.Source, job_id: str | None =
         )
         print(f"Successfully processed article with LLM: {scraped_data['title']}")
 
-        processed_articles += 1
         if update_progress_callback:
-            update_progress_callback(1)
+            update_progress_callback(processed=1, skipped=0, failed=0)
 
     return False
 
@@ -164,6 +166,8 @@ def scrape_source(db: Session, source: models.Source, job_id: str | None = None,
     scraper_type = source.scraper_type
     print(f"Initiating scrape for source '{source.name}' with type '{scraper_type}'")
 
+    was_canceled = False
+
     if scraper_type == "HTML":
         # If article links are not provided, fetch them now.
         # This allows for both pre-scanning (in a job) and direct scraping.
@@ -171,8 +175,10 @@ def scrape_source(db: Session, source: models.Source, job_id: str | None = None,
         if links_to_scrape is None:
             links_to_scrape = get_article_links(source)
 
-        canceled = _scrape_html_source(db, source, job_id=job_id, article_links=links_to_scrape, update_progress_callback=update_progress_callback)
-        if canceled:
+        was_canceled = _scrape_html_source(
+            db, source, job_id=job_id, article_links=links_to_scrape, update_progress_callback=update_progress_callback
+        )
+        if was_canceled:
             return True
     else:
         print(f"Unknown or unsupported scraper type: {scraper_type}")

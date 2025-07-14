@@ -60,13 +60,11 @@ def run_scraping_job(job_id: str, db: Session = None, source_id: int | None = No
         print(f"JOB {job_id}: Found {total_sources} sources.")
 
         # --- Pre-computation Step ---
-        # First, get all article links to calculate a true total for progress tracking
         all_articles_to_scrape = []
         for i, source in enumerate(sources):
             print(f"JOB {job_id}: Pre-scanning source {i+1}/{total_sources}: {source.name}")
             article_links = scraping.get_article_links(source)
             for link in article_links:
-                # Avoid adding duplicates from the same run
                 if link not in [l for _, l in all_articles_to_scrape]:
                     all_articles_to_scrape.append((source, link))
         
@@ -74,20 +72,28 @@ def run_scraping_job(job_id: str, db: Session = None, source_id: int | None = No
         print(f"JOB {job_id}: Found a total of {total_articles} new articles to scrape across {total_sources} sources.")
 
         processed_articles_count = 0
+        skipped_articles_count = 0
+        failed_articles_count = 0
 
         # --- Progress Update Callback ---
-        def update_progress(articles_processed_in_source=0):
-            nonlocal processed_articles_count
-            processed_articles_count += articles_processed_in_source
+        def update_progress(processed: int = 0, skipped: int = 0, failed: int = 0):
+            nonlocal processed_articles_count, skipped_articles_count, failed_articles_count
+            
+            processed_articles_count += processed
+            skipped_articles_count += skipped
+            failed_articles_count += failed
 
-            progress = int((processed_articles_count / total_articles) * 100) if total_articles > 0 else 0
+            handled_articles = processed_articles_count + skipped_articles_count + failed_articles_count
+            progress = int((handled_articles / total_articles) * 100) if total_articles > 0 else 0
             
             elapsed_time = time.time() - start_time
-            eta_seconds = (elapsed_time / processed_articles_count) * (total_articles - processed_articles_count) if processed_articles_count > 0 else -1.0
+            eta_seconds = (elapsed_time / handled_articles) * (total_articles - handled_articles) if handled_articles > 0 else -1.0
 
             job_statuses[job_id].progress = progress
             job_statuses[job_id].total_articles = total_articles
             job_statuses[job_id].processed_articles = processed_articles_count
+            job_statuses[job_id].skipped_articles = skipped_articles_count
+            job_statuses[job_id].failed_articles = failed_articles_count
             job_statuses[job_id].eta_seconds = eta_seconds
             job_statuses[job_id].message = f"Scraped {processed_articles_count}/{total_articles} articles..."
 
@@ -100,7 +106,6 @@ def run_scraping_job(job_id: str, db: Session = None, source_id: int | None = No
             job_statuses[job_id].processed_sources = i
             job_statuses[job_id].message = f"Processing source {i+1}/{total_sources}: {source.name}"
 
-            # Check for cancellation before processing each source
             if job_id in canceled_jobs:
                 print(f"JOB {job_id}: Cancellation detected. Terminating.")
                 job_statuses[job_id].status = "canceled"
@@ -108,7 +113,6 @@ def run_scraping_job(job_id: str, db: Session = None, source_id: int | None = No
                 canceled_jobs.remove(job_id)
                 return
 
-            # Get the links for the current source that were pre-scanned
             links_for_current_source = [link for s, link in all_articles_to_scrape if s.id == source.id]
 
             canceled = scraping.scrape_source(
@@ -118,6 +122,8 @@ def run_scraping_job(job_id: str, db: Session = None, source_id: int | None = No
                 article_links=links_for_current_source,
                 update_progress_callback=update_progress
             )
+
+            
 
             if canceled:
                 if job_id in canceled_jobs:
@@ -130,9 +136,8 @@ def run_scraping_job(job_id: str, db: Session = None, source_id: int | None = No
             print(f"JOB {job_id}: Finished scrape for source: {source.name}")
 
         print(f"JOB {job_id}: All sources processed. Completing job.")
-        job_statuses[job_id] = schemas.JobStatus(
-            id=job_id, status="completed", progress=100, message="Scraping complete!"
-        )
+        job_statuses[job_id].status = "completed"
+        job_statuses[job_id].message = "Scraping complete!"
 
     except Exception as e:
         print(f"JOB {job_id}: An error occurred: {e}")

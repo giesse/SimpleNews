@@ -7,6 +7,8 @@ export interface ScrapeJob {
   processed_sources: number;
   total_articles: number;
   processed_articles: number;
+  skipped_articles: number;
+  failed_articles: number;
   eta_seconds: number;
 }
 

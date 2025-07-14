@@ -20,6 +20,8 @@ class JobStatus(BaseModel):
     processed_sources: int = 0
     total_articles: int = 0
     processed_articles: int = 0
+    skipped_articles: int = 0
+    failed_articles: int = 0
     eta_seconds: float = -1.0
 
 

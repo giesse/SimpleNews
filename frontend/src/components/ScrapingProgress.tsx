@@ -9,6 +9,8 @@ function formatDuration(seconds: number): string {
 }
 
 export default function ScrapingProgress({ job }: { job: ScrapeJob }) {
+    const handled_articles = job.processed_articles + job.skipped_articles + job.failed_articles;
+
     return (
         <div className="w-full bg-gray-100 p-4 rounded-lg shadow-inner">
             <div className="flex justify-between items-center mb-2">
@@ -25,9 +27,21 @@ export default function ScrapingProgress({ job }: { job: ScrapeJob }) {
                 </div>
                 <div className="flex justify-between">
                     <span className="font-medium">Articles:</span>
-                    <span>{job.processed_articles} / {job.total_articles}</span>
+                    <span>{handled_articles} / {job.total_articles}</span>
                 </div>
-                <div className="flex justify-between col-span-2">
+                <div className="flex justify-between">
+                    <span className="font-medium text-green-600">Processed:</span>
+                    <span className="text-green-600">{job.processed_articles}</span>
+                </div>
+                <div className="flex justify-between">
+                    <span className="font-medium text-yellow-600">Skipped:</span>
+                    <span className="text-yellow-600">{job.skipped_articles}</span>
+                </div>
+                <div className="flex justify-between">
+                    <span className="font-medium text-red-600">Failed:</span>
+                    <span className="text-red-600">{job.failed_articles}</span>
+                </div>
+                <div className="flex justify-between">
                     <span className="font-medium">ETA:</span>
                     <span>{formatDuration(job.eta_seconds)}</span>
                 </div>

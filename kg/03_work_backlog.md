@@ -14,7 +14,7 @@ This document lists the remaining tasks required to complete the project. It is 
 * [x] - Filtering by category also doesn't work
 * [x] - The list of categories in the drop box is not in alphabetical order
 * [x] - The article card does not show categories
-* [ ] - The scraping progress indicator should show how many articles have been skipped (duplicates) or were not processed because of an error; right now the progress bar does not move at all if articles are being skipped or can't be fetched because of an error
+* [x] - The scraping progress indicator should show how many articles have been skipped (duplicates) or were not processed because of an error; right now the progress bar does not move at all if articles are being skipped or can't be fetched because of an error
 * [ ] - Filtering by category: to be honest though, it would be more useful to me to be able to *exclude* some categories from the list (rather than just viewing the list for a specific category)
 * [ ] - Clickbait titles. I hate clickbait titles. Perhaps we should replace titles with generated ones that are more accurate and not clickbaity.
 * [ ] - Need a way to trigger reprocessing (summary, categories, score, etc.) an article, if the processing failed for some reason. (Eg. right now I have a couple articles with no summary and no score, and strangely one article with not even a title.)
