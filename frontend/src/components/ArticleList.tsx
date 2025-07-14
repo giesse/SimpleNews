@@ -86,8 +86,8 @@ export default function ArticleList() {
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [readArticleIds, setReadArticleIds] = useState<Set<number>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [showReadArticles, setShowReadArticles] = useState(true);
-  const [minScore, setMinScore] = useState(0);
+  const [showReadArticles, setShowReadArticles] = useState(false);
+  const [minScore, setMinScore] = useState(75);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

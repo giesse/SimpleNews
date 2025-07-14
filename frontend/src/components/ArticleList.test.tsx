@@ -70,12 +70,23 @@ describe('ArticleList', () => {
     });
   });
 
-  it('should render a loading state initially and then display all articles', async () => {
+  it('should render a loading state initially and then display articles matching the default filters', async () => {
     render(<ArticleList />);
     expect(screen.getByText(/loading/i)).toBeInTheDocument();
-    expect(await screen.findByText('First Test Article')).toBeInTheDocument();
-    expect(screen.getByText('Second Test Article')).toBeInTheDocument();
-    expect(screen.getByText('Third Test Article')).toBeInTheDocument();
+
+    // Wait for the articles to be displayed
+    await screen.findByText('First Test Article');
+
+    // By default, it should only show unread articles with a score of 75 or higher
+    expect(screen.getByText('First Test Article')).toBeInTheDocument(); // Unread, score 85
+    expect(screen.getByText('Third Test Article')).toBeInTheDocument(); // Unread, score 95
+    expect(screen.queryByText('Second Test Article')).not.toBeInTheDocument(); // Read, score 45
+
+    // Verify the initial API call reflects the default filters
+    expect(mockedApi.getArticles).toHaveBeenCalledWith({
+      read: false,
+      min_score: 75,
+    });
   });
 
   it('should filter articles when a category is selected', async () => {
